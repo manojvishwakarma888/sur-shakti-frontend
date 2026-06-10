@@ -1,0 +1,189 @@
+/* src/pages/Login.css */
+
+/* 1. Global Reset & Font Fix */
+* {
+    font-family: 'Inter', sans-serif !important;
+    box-sizing: border-box; /* 🟢 Ensures padding doesn't break width */
+}
+
+.login-container {
+    min-height: 100vh; /* 🟢 Changed from height to min-height */
+    width: 100%;
+    background-color: #fff;
+    /* overflow: hidden; */ /* 🟢 Removed to allow scrolling on small phones */
+}
+
+/* --- LEFT SIDE: BRANDING --- */
+.login-brand-section {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    color: white;
+    padding: 60px 40px; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+}
+
+.brand-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+
+.hero-text h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem); /* 🟢 Scales font based on screen size */
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 20px;
+}
+
+.hero-text p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    line-height: 1.6;
+    max-width: 450px;
+}
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid #0284c7;
+    margin-right: -12px;
+    object-fit: cover;
+}
+
+/* --- RIGHT SIDE: FORM --- */
+.login-form-section {
+    background: #ffffff;
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px; /* 🟢 Reduced from 120px for better mobile fit */
+}
+
+/* 🟢 MOBILE RESPONSIVE FIXES */
+@media (max-width: 768px) {
+    .login-brand-section {
+        display: none !important; /* 🟢 Hides branding on mobile so form shows up */
+    }
+    
+    .login-form-section {
+        padding: 20px;
+        width: 100%;
+    }
+
+    .form-wrapper {
+        max-width: 100%;
+    }
+    
+    .form-title {
+        font-size: 1.75rem;
+        text-align: center;
+    }
+    
+    .form-subtitle {
+        text-align: center;
+    }
+}
+
+.form-wrapper {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.form-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.form-subtitle {
+    color: #6b7280;
+    margin-bottom: 30px;
+}
+
+/* INPUT FIELDS */
+.input-group-custom {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-icon {
+    position: absolute;
+    top: 50%;
+    left: 16px;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    z-index: 10;
+}
+
+.form-control-custom {
+    width: 100%;
+    height: 52px;
+    padding: 0 20px 0 50px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-control-custom:focus {
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+    outline: none;
+}
+
+/* BUTTONS */
+.btn-primary-custom {
+    background-color: #0284c7;
+    color: white;
+    border: none;
+    height: 52px;
+    width: 100%;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-primary-custom:hover {
+    background-color: #0369a1;
+}
+
+.avatars {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+}
+
+/* Individual avatar circles */
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    /* Use exactly the same color as the branding background for the border */
+    border: 3px solid #0284c7; 
+    margin-left: -12px; /* Pulls the image to the left to overlap */
+    object-fit: cover;
+    background-color: #fff;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+}
+
+/* Bring to front on hover */
+.avatar:hover {
+    transform: translateY(-5px) scale(1.1);
+    z-index: 10;
+    border-color: #fff;
+}
+
+/* Ensure the first one doesn't have a negative margin */
+.avatar:first-child {
+    margin-left: 0;
+}

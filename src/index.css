@@ -1,0 +1,452 @@
+
+.active-link {
+    background-color: #0d6efd !important; /* Bootstrap Primary Blue */
+    color: white !important;
+}
+
+:root {
+  /* --- VIBRANT LIGHT MODE CUSTOM VARIABLES --- */
+  --bg-primary: #f8fafc; /* Clean Slate 50 */
+  --bg-secondary: #ffffff;
+  --text-primary: #0f172a; /* Rich Slate 900 */
+  --text-secondary: #64748b; /* Slate 500 */
+  --border-color: #e2e8f0; /* Slate 200 */
+  --card-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #64748b;
+  --sidebar-active-bg: rgba(79, 70, 229, 0.08); /* Vibrant Indigo tint */
+  --sidebar-active-text: #4f46e5; /* Vibrant Indigo */
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1; /* Slate 300 */
+  --input-text: #0f172a;
+  --table-header-bg: #f1f5f9; /* Slate 100 */
+  --task-notice-bg: rgba(79, 70, 229, 0.08);
+  --urgent-bg: #fef2f2;
+  --urgent-badge-bg: #fee2e2;
+  --info-badge-bg: #e0e7ff;
+}
+
+body.dark-mode {
+  /* --- VIBRANT DARK MODE CUSTOM VARIABLES (Deep Space Theme) --- */
+  --bg-primary: #090d16; /* Deepest Navy/Space Black */
+  --bg-secondary: #0f172a; /* Rich Slate Navy */
+  --text-primary: #f8fafc; /* Bright Slate 50 */
+  --text-secondary: #94a3b8; /* Slate 400 */
+  --border-color: #1e293b; /* Slate 800 */
+  --card-bg: #151f32; /* Rich Indigo-Slate Card Bg */
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #94a3b8;
+  --sidebar-active-bg: rgba(99, 102, 241, 0.18); /* Indigo Glow */
+  --sidebar-active-text: #818cf8; /* Bright Indigo */
+  --input-bg: #1e293b;
+  --input-border: #334155;
+  --input-text: #f8fafc;
+  --table-header-bg: #0f172a;
+  --task-notice-bg: rgba(99, 102, 241, 0.15);
+  --urgent-bg: rgba(239, 68, 68, 0.12);
+  --urgent-badge-bg: rgba(239, 68, 68, 0.20);
+  --info-badge-bg: rgba(99, 102, 241, 0.20);
+
+  /* Bootstrap Override variables for context subtle backgrounds - Vibrant versions */
+  --bs-primary-bg-subtle: rgba(99, 102, 241, 0.15);
+  --bs-danger-bg-subtle: rgba(239, 68, 68, 0.15);
+  --bs-success-bg-subtle: rgba(16, 185, 129, 0.15);
+  --bs-warning-bg-subtle: rgba(245, 158, 11, 0.15);
+  --bs-info-bg-subtle: rgba(6, 182, 212, 0.15);
+}
+
+/* --- THEME-BASED RULES --- */
+
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Force all text elements in dark mode to be readable white/light grey */
+body.dark-mode,
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6,
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode small,
+body.dark-mode label,
+body.dark-mode th,
+body.dark-mode td,
+body.dark-mode li,
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode .form-label {
+    color: #ffffff !important;
+}
+
+/* Override muted/secondary text to be slightly off-white (instead of dark gray) so they remain readable */
+body.dark-mode .text-muted,
+body.dark-mode .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Preserve semantic colors for highlights, successes, warnings, and dangers */
+body.dark-mode .text-primary,
+body.dark-mode .text-primary * {
+    color: var(--sidebar-active-text) !important;
+}
+body.dark-mode .text-success,
+body.dark-mode .text-success * {
+    color: #34d399 !important; /* Vibrant emerald green */
+}
+body.dark-mode .text-danger,
+body.dark-mode .text-danger * {
+    color: #f87171 !important; /* Vibrant light red */
+}
+body.dark-mode .text-warning,
+body.dark-mode .text-warning * {
+    color: #fbbf24 !important; /* Vibrant yellow */
+}
+
+/* Sidebar navigation link overrides */
+body.dark-mode .sidebar-container .nav-link.active,
+body.dark-mode .sidebar-container .nav-link.active * {
+    color: var(--sidebar-active-text) !important;
+}
+body.dark-mode .sidebar-container .nav-link:not(.active),
+body.dark-mode .sidebar-container .nav-link:not(.active) * {
+    color: var(--sidebar-text) !important;
+}
+
+/* Override Bootstrap Alert variables in Dark Mode */
+body.dark-mode .alert-success {
+    --bs-alert-color: #a7f3d0 !important;
+    --bs-alert-bg: rgba(16, 185, 129, 0.15) !important;
+    --bs-alert-border-color: rgba(16, 185, 129, 0.3) !important;
+}
+body.dark-mode .alert-danger {
+    --bs-alert-color: #fca5a5 !important;
+    --bs-alert-bg: rgba(239, 68, 68, 0.15) !important;
+    --bs-alert-border-color: rgba(239, 68, 68, 0.3) !important;
+}
+body.dark-mode .alert-warning {
+    --bs-alert-color: #fde047 !important;
+    --bs-alert-bg: rgba(245, 158, 11, 0.15) !important;
+    --bs-alert-border-color: rgba(245, 158, 11, 0.3) !important;
+}
+body.dark-mode .alert-info {
+    --bs-alert-color: #67e8f9 !important;
+    --bs-alert-bg: rgba(6, 182, 212, 0.15) !important;
+    --bs-alert-border-color: rgba(6, 182, 212, 0.3) !important;
+}
+body.dark-mode .alert-primary {
+    --bs-alert-color: #a5b4fc !important;
+    --bs-alert-bg: rgba(99, 102, 241, 0.15) !important;
+    --bs-alert-border-color: rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Override Bootstrap Backgrounds */
+body.dark-mode .bg-light {
+    background-color: var(--bg-secondary) !important;
+}
+
+body.dark-mode .bg-white,
+body.dark-mode .card,
+body.dark-mode .modal-content {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode .sidebar-container {
+    background-color: var(--sidebar-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+body.dark-mode .sidebar-container .bg-light {
+    background-color: var(--bg-secondary) !important;
+}
+
+body.dark-mode .sidebar-container .text-dark {
+    color: var(--text-primary) !important;
+}
+
+body.dark-mode .sidebar-container .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Fix Tables in Dark Mode */
+body.dark-mode .table {
+    color: var(--text-primary) !important;
+    --bs-table-bg: var(--card-bg) !important;
+    --bs-table-striped-bg: var(--bg-secondary) !important;
+    --bs-table-hover-bg: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode .table thead,
+body.dark-mode .table thead tr,
+body.dark-mode .table thead th {
+    background-color: var(--table-header-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode .table td {
+    color: var(--text-primary) !important;
+}
+
+/* Fix Inputs */
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+    color: var(--input-text) !important;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    border-color: var(--sidebar-active-text) !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Vibrant Buttons in Dark Mode */
+body.dark-mode .btn-primary {
+    background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+    border-color: #4f46e5 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+}
+body.dark-mode .btn-primary:hover {
+    background-image: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%) !important;
+    border-color: #4338ca !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn-danger {
+    background-image: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25) !important;
+}
+body.dark-mode .btn-danger:hover {
+    background-image: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%) !important;
+    border-color: #b91c1c !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn-success {
+    background-image: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+}
+body.dark-mode .btn-success:hover {
+    background-image: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn-warning {
+    background-color: #fbbf24 !important;
+    border-color: #fbbf24 !important;
+    color: #000000 !important; /* High contrast dark text on bright warning yellow */
+}
+body.dark-mode .btn-warning:hover {
+    background-color: #f59e0b !important;
+    color: #000000 !important;
+}
+
+body.dark-mode .btn-dark {
+    background-color: var(--border-color) !important;
+    color: #ffffff !important;
+    border-color: var(--border-color) !important;
+}
+body.dark-mode .btn-dark:hover {
+    background-color: var(--input-bg) !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn-light {
+    background-color: var(--bg-secondary) !important;
+    color: #ffffff !important;
+    border-color: var(--border-color) !important;
+}
+body.dark-mode .btn-light:hover {
+    background-color: var(--input-bg) !important;
+    color: #ffffff !important;
+}
+
+/* Outline Buttons in Dark Mode */
+body.dark-mode .btn-outline-primary {
+    border-color: var(--sidebar-active-text) !important;
+    color: var(--sidebar-active-text) !important;
+    background-color: transparent !important;
+}
+body.dark-mode .btn-outline-primary:hover,
+body.dark-mode .btn-outline-primary.active,
+body.dark-mode .btn-outline-primary:active {
+    background-color: var(--sidebar-active-text) !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn-outline-secondary {
+    border-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
+    background-color: transparent !important;
+}
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: var(--border-color) !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn-outline-success {
+    border-color: #34d399 !important;
+    color: #34d399 !important;
+    background-color: transparent !important;
+}
+body.dark-mode .btn-outline-success:hover,
+body.dark-mode .btn-outline-success.active,
+body.dark-mode .btn-outline-success:active {
+    background-color: #34d399 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn-outline-danger {
+    border-color: #f87171 !important;
+    color: #f87171 !important;
+    background-color: transparent !important;
+}
+body.dark-mode .btn-outline-danger:hover,
+body.dark-mode .btn-outline-danger.active,
+body.dark-mode .btn-outline-danger:active {
+    background-color: #f87171 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn-outline-dark {
+    border-color: var(--border-color) !important;
+    color: #ffffff !important;
+    background-color: transparent !important;
+}
+body.dark-mode .btn-outline-dark:hover,
+body.dark-mode .btn-outline-dark.active,
+body.dark-mode .btn-outline-dark:active {
+    background-color: var(--border-color) !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .card {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Fix Login & Register Layout in Dark Mode */
+body.dark-mode .login-container {
+    background-color: var(--bg-primary) !important;
+}
+body.dark-mode .login-form-section {
+    background-color: var(--bg-primary) !important;
+}
+body.dark-mode .form-title {
+    color: var(--text-primary) !important;
+}
+body.dark-mode .form-subtitle {
+    color: var(--text-secondary) !important;
+}
+body.dark-mode .input-group {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+}
+body.dark-mode .input-group input {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+body.dark-mode .input-group-text {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+body.dark-mode .border {
+    border-color: var(--border-color) !important;
+}
+body.dark-mode .border-bottom {
+    border-color: var(--border-color) !important;
+}
+body.dark-mode .border-top {
+    border-color: var(--border-color) !important;
+}
+body.dark-mode .border-end {
+    border-color: var(--border-color) !important;
+}
+body.dark-mode .bg-white.border {
+    border-color: var(--border-color) !important;
+}
+body.dark-mode .card.border {
+    border-color: var(--border-color) !important;
+}
+body.dark-mode .btn-close {
+    filter: invert(1) grayscale(1) brightness(2);
+}
+
+
+.d-column{
+    flex-direction: row;
+}
+/* --- MOBILE RESPONSIVENESS (FIXED) --- */
+
+/* 1. Sidebar Default Behavior on Mobile */
+@media (max-width: 768px) {
+    .sidebar-container {
+        position: fixed;
+        top: 0;
+        /* Start off-screen (Must match width) */
+        left: -280px; 
+        
+        /* Force width to match Sidebar.jsx inline styles */
+        width: 280px !important; 
+        min-width: 280px !important;
+        
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease-in-out; /* Smooth transition for 'left' property */
+        box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-container.open {
+        left: 0; /* Slide in */
+    }
+
+    /* 2. Overlay Background when Menu is Open */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1040;
+        display: none;
+        backdrop-filter: blur(2px); /* Optional: Adds a nice blur effect */
+    }
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* 3. Adjust Main Content Padding */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    .d-column{
+    flex-direction: column;
+}
+}
