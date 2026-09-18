@@ -57,6 +57,10 @@ body.dark-mode {
 
 /* --- THEME-BASED RULES --- */
 
+body, input, button, select, textarea {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
 body {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
@@ -64,6 +68,7 @@ body {
 }
 
 /* Force all text elements in dark mode to be readable white/light grey */
+/* Assign semantic text colors in dark mode without overriding utility highlights */
 body.dark-mode,
 body.dark-mode h1,
 body.dark-mode h2,
@@ -82,7 +87,7 @@ body.dark-mode input,
 body.dark-mode select,
 body.dark-mode textarea,
 body.dark-mode .form-label {
-    color: #ffffff !important;
+    color: var(--text-primary);
 }
 
 /* Override muted/secondary text to be slightly off-white (instead of dark gray) so they remain readable */
@@ -174,7 +179,7 @@ body.dark-mode .sidebar-container .bg-light {
     background-color: var(--bg-secondary) !important;
 }
 
-body.dark-mode .sidebar-container .text-dark {
+body.dark-mode .text-dark {
     color: var(--text-primary) !important;
 }
 
@@ -401,10 +406,19 @@ body.dark-mode .btn-close {
 .d-column{
     flex-direction: row;
 }
+
+/* Sticky Sidebar on Desktop */
+.sidebar-container {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
 /* --- MOBILE RESPONSIVENESS (FIXED) --- */
 
 /* 1. Sidebar Default Behavior on Mobile */
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .sidebar-container {
         position: fixed;
         top: 0;
@@ -446,7 +460,203 @@ body.dark-mode .btn-close {
         margin-left: 0 !important;
         width: 100% !important;
     }
-    .d-column{
-    flex-direction: column;
+    .d-column {
+        flex-direction: column;
+    }
 }
+
+/* Ensure receipt preview matches printable paper design regardless of dark/light theme */
+body.dark-mode .receipt-print-area,
+body.dark-mode .receipt-print-area h4,
+body.dark-mode .receipt-print-area span,
+body.dark-mode .receipt-print-area div,
+body.dark-mode .receipt-print-area small,
+body.dark-mode .receipt-print-area td,
+body.dark-mode .receipt-print-area th {
+    color: #000000 !important;
+}
+body.dark-mode .receipt-print-area .text-muted {
+    color: #6c757d !important;
+}
+
+/* --- SKELETON SHIMMER LOADERS --- */
+@keyframes shimmerAnimation {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.shimmer-placeholder {
+    background: linear-gradient(90deg, #e2e8f0 25%, #cbd5e1 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: shimmerAnimation 1.6s infinite linear;
+    display: inline-block;
+    border-radius: 6px;
+}
+
+body.dark-mode .shimmer-placeholder {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background-size: 200% 100%;
+}
+
+.shimmer-title {
+    height: 1.25rem;
+    width: 60%;
+    margin-bottom: 0.5rem;
+}
+
+.shimmer-text {
+    height: 0.85rem;
+    width: 90%;
+    margin-bottom: 0.5rem;
+}
+
+.shimmer-text-short {
+    height: 0.85rem;
+    width: 40%;
+}
+
+.shimmer-badge {
+    height: 1.5rem;
+    width: 80px;
+    border-radius: 20px;
+}
+
+.shimmer-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+}
+
+.shimmer-btn {
+    height: 35px;
+    width: 100px;
+    border-radius: 6px;
+}
+
+/* --- PAYMENT SUCCESS ANIMATED CHECKMARK --- */
+@keyframes drawCheck {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes scaleCheck {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+.checkmark-circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 5;
+    stroke-miterlimit: 10;
+    stroke: #198754;
+    fill: none;
+    animation: drawCheck 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke-width: 5;
+    stroke: #198754;
+    fill: none;
+    animation: drawCheck 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards, scaleCheck 0.4s ease-in-out 1s;
+}
+
+/* --- STEPPER REVIEW STATE PULSE --- */
+@keyframes warningPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+    }
+}
+.animate-pulse-warning {
+    animation: warningPulse 2s infinite;
+}
+
+
+
+/* Mobile app navigation and a flex shell that fits the viewport. */
+.app-shell { min-height: 100dvh; }
+.main-content { min-width: 0; }
+.app-page { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important; }
+.sidebar-container { height: 100dvh; flex-shrink: 0; }
+.resident-dashboard { overflow-wrap: anywhere; }
+.resident-dashboard > .row { --bs-gutter-x: 1rem; }
+.resident-dashboard .display-6 { font-size: clamp(1.65rem, 3vw, 2.5rem); }
+.resident-cards > * { min-width: 0; }
+.mobile-bottom-nav {
+  position: fixed; bottom: 0; inset-inline: 0; z-index: 1030;
+  display: flex; background: var(--bg-secondary); border-top: 1px solid var(--border-color);
+  padding: .4rem .5rem calc(.4rem + env(safe-area-inset-bottom));
+}
+.mobile-bottom-nav a {
+  flex: 1; min-height: 48px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: .3rem; text-decoration: none; color: var(--text-secondary);
+  border-radius: .75rem; font-size: .75rem; font-weight: 600;
+}
+.mobile-bottom-nav a svg { font-size: 1.15rem; }
+.mobile-bottom-nav a.active { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); }
+.whatsapp-dialog {
+  width: min(34rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem);
+  padding: 1.25rem; border: 1px solid var(--border-color);
+  background: var(--card-bg); color: var(--text-primary); overflow-y: auto;
+}
+.whatsapp-dialog::backdrop { background: rgb(0 0 0 / 50%); }
+@media (max-width: 767.98px) {
+  .app-page .btn, .whatsapp-dialog .btn { min-height: 44px; }
+  .app-page .form-control, .app-page .form-select, .whatsapp-dialog .form-control { font-size: 16px; }
+  .resident-dashboard > .row:first-child { margin-bottom: 1rem !important; }
+  .app-page .d-flex { min-width: 0; }
+  .sidebar-container:not(.open) { visibility: hidden; }
+  .sidebar-container { max-width: 90vw; }
+  .sidebar-container.open { visibility: visible; }
+}
+@media (min-width: 768px) {
+  .mobile-bottom-nav { display: none; }
+  .app-page { padding-bottom: 1.5rem !important; }
+  .sidebar-container { width: 240px !important; min-width: 240px !important; }
+  .sidebar-container > .mb-4 { margin-bottom: 1rem !important; }
+  .sidebar-container .nav { gap: .25rem !important; }
+}
+@media (min-width: 992px) {
+  .resident-dashboard .resident-cards .mb-4 { margin-bottom: 1rem !important; }
+}
+
+/* Compact bill rows with consistent touch targets. */
+@media (max-width: 767.98px) {
+  .mobile-bill-card { padding: .75rem; }
+  .mobile-bill-header {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start; gap: .5rem;
+  }
+  .mobile-bill-header > div { min-width: 0; overflow-wrap: anywhere; }
+  .mobile-bill-header .fw-bold { font-size: .9rem; line-height: 1.35; }
+  .mobile-bill-header .small { font-size: .75rem; line-height: 1.4; margin-top: .15rem; }
+  .mobile-bill-header .badge { padding: .25rem .6rem !important; font-size: .65rem; }
+  .mobile-bill-footer {
+    display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between; gap: .375rem .5rem; margin-top: .5rem;
+  }
+  .mobile-bill-footer > .fw-bold { font-size: 1.1rem !important; overflow-wrap: anywhere; }
+  .mobile-bill-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; }
+  .mobile-bill-actions .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: .375rem .625rem !important;
+    border-radius: .625rem !important; font-size: .75rem; white-space: nowrap;
+  }
+  .mobile-bill-actions .bill-edit-button { width: 44px; height: 44px; flex: 0 0 44px; padding: 0 !important; }
+  .mobile-bill-actions svg { flex-shrink: 0; }
 }

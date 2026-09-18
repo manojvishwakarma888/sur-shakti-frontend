@@ -25,6 +25,7 @@ const AdminDashboard = () => {
   });
   
   const [defaulters, setDefaulters] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sendingReminders, setSendingReminders] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false); // 🟢 NEW: Modal State
@@ -35,8 +36,11 @@ const AdminDashboard = () => {
 
   const fetchAdminData = async () => {
     try {
-      const statsRes = await api.get('/Dashboard/stats');
-      const billsRes = await api.get('/Bill');
+      const [statsRes, billsRes, expensesRes] = await Promise.all([
+          api.get('/Dashboard/stats'),
+          api.get('/Bill'),
+          api.get('/Expense')
+      ]);
       const data = statsRes.data;
 
       setStats({
@@ -58,6 +62,7 @@ const AdminDashboard = () => {
         }));
 
       setDefaulters(unpaidList);
+      setExpenses(expensesRes.data || []);
       setLoading(false);
     } catch (err) { 
         console.error("Dashboard Load Error:", err); 
@@ -97,12 +102,11 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="d-flex bg-light p-3 p-md-4 min-vh-100">
-      <div className="flex-grow-1">
+    <>
         
-        <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
           <div>
-             <h2 className="fw-bold text-dark">Admin Overview</h2>
+             <h2 className="fw-bold text-dark mb-1">Admin Overview</h2>
              <p className="text-muted small mb-0">Sur Shakti Residency • Financial Health</p>
           </div>
           <div className="d-flex align-items-center gap-3">
@@ -117,13 +121,71 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Row */}
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-3 mb-4">
+        <div className="row row-cols-2 row-cols-sm-3 row-cols-md-5 g-3 mb-4">
           <StatsCard title="Total Collection" value={stats.totalCollection} color="primary" icon={FaArrowUp} isMoney />
           <StatsCard title="Total Expenses" value={stats.totalExpense} color="danger" icon={FaArrowDown} isMoney />
           <StatsCard title="Cash In Hand" value={stats.cashInHand} color="success" icon={FaWallet} isMoney />
           <StatsCard title="Total Pending" value={stats.totalPending} color="warning" icon={MdOutlinePendingActions} isMoney />
           <StatsCard title="Open Complaints" value={stats.openComplaints} color="info" icon={FaExclamationTriangle} />
         </div>
+
+        {/* Expense Breakdown Progress Bar */}
+        {(() => {
+          const categoriesList = ['Repairs', 'Salary', 'Utility', 'Event', 'Other'];
+          const categoryColors = {
+              Repairs: '#dc3545',
+              Salary: '#0d6efd',
+              Utility: '#0dcaf0',
+              Event: '#198754',
+              Other: '#ffc107'
+          };
+          const breakdown = categoriesList.map(cat => {
+              const amount = expenses
+                  .filter(e => (e.category || e.Category || '').toLowerCase() === cat.toLowerCase())
+                  .reduce((sum, e) => sum + e.amount, 0);
+              const percentage = stats.totalExpense > 0 ? (amount / stats.totalExpense) * 100 : 0;
+              return { category: cat, amount, percentage, color: categoryColors[cat] };
+          }).filter(item => item.amount > 0);
+
+          return stats.totalExpense > 0 && breakdown.length > 0 && (
+            <div className="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
+              <div className="card-body p-1">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                   <small className="text-muted fw-bold text-uppercase" style={{fontSize: '0.65rem', letterSpacing: '0.5px'}}>Expense Distribution</small>
+                   <small className="text-danger fw-bold font-monospace" style={{fontSize: '0.7rem'}}>Total: {formatCurrency(stats.totalExpense)}</small>
+                </div>
+                <div className="progress rounded-pill mb-2" style={{ height: '8px', overflow: 'hidden' }}>
+                   {breakdown.map((item, idx) => (
+                      <div 
+                        key={idx}
+                        className="progress-bar"
+                        role="progressbar"
+                        style={{ 
+                            width: `${item.percentage}%`, 
+                            backgroundColor: item.color,
+                            transition: 'width 0.6s ease'
+                        }}
+                        aria-valuenow={item.percentage}
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        title={`${item.category}: ${formatCurrency(item.amount)} (${item.percentage.toFixed(1)}%)`}
+                      ></div>
+                   ))}
+                </div>
+                <div className="d-flex flex-wrap gap-3 mt-1">
+                   {breakdown.map((item, idx) => (
+                      <div key={idx} className="d-flex align-items-center gap-1">
+                         <span className="rounded-circle d-inline-block" style={{ width: '8px', height: '8px', backgroundColor: item.color }}></span>
+                         <small className="text-muted" style={{ fontSize: '0.7rem' }}>
+                            {item.category}: <span className="fw-bold text-dark">{formatCurrency(item.amount)}</span> ({item.percentage.toFixed(0)}%)
+                         </small>
+                      </div>
+                   ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="row g-4">
           {/* Defaulters List */}
@@ -184,7 +246,6 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* 🟢 NEW: Bulk Import Modal Integration */}
       {showImportModal && (
@@ -193,7 +254,7 @@ const AdminDashboard = () => {
            onRefresh={fetchAdminData} 
         />
       )}
-    </div>
+    </>
   );
 };
 

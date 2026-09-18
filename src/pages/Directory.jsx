@@ -33,9 +33,14 @@ const Directory = () => {
     try {
       const res = await api.get('Directory'); // Calls your DirectoryController
       setMembers(res.data);
+      localStorage.setItem('cached_members', JSON.stringify(res.data));
       setLoading(false);
     } catch (err) {
-      console.error("Failed to load directory", err);
+      console.error("Failed to load directory, loading from local storage", err);
+      const cached = localStorage.getItem('cached_members');
+      if (cached) {
+        setMembers(JSON.parse(cached));
+      }
       setLoading(false);
     }
   };
@@ -47,11 +52,8 @@ const Directory = () => {
   );
 
   return (
-    <div className="d-flex">
-      {/* <Sidebar /> */}
-      <div className="flex-grow-1 bg-light" style={{ minHeight: '100vh' }}>
-        
-        <h2 className="fw-bold text-dark mb-4">Community Directory</h2>
+    <>
+      <h2 className="fw-bold text-dark mb-4">Community Directory</h2>
 
         {/* --- SECTION 1: EMERGENCY CONTACTS --- */}
         <h6 className="fw-bold text-danger mb-3 text-uppercase small" style={{letterSpacing:'1px'}}>
@@ -100,7 +102,7 @@ const Directory = () => {
         </div>
 
         {/* --- SECTION 3: RESIDENT SEARCH --- */}
-        <div className="d-flex justify-content-between align-items-center mb-4 d-column">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
             <h5 className="fw-bold text-dark m-0">All Residents ({members.length})</h5>
             <div className="input-group shadow-sm" style={{maxWidth: '300px'}}>
                 <span className="input-group-text bg-white border-0 ps-3"><FaSearch className="text-muted"/></span>
@@ -145,8 +147,7 @@ const Directory = () => {
             ))}
         </div>
 
-      </div>
-    </div>
+    </>
   );
 };
 

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 // 1. REMOVE 'axios' import
-import api from '../services/api'; // 2. KEEP 'api' (it has the cookie interceptor)
+import api, { BACKEND_URL } from '../services/api'; // 2. KEEP 'api' (it has the cookie interceptor)
 
 import { 
   FaBuilding, 
@@ -22,8 +22,7 @@ const Sidebar = ({ isOpen, toggle }) => {
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState(null);
 
-  // Define Backend URL for Images (Ideally put this in a config file)
-  const BACKEND_URL = "http://localhost:5236";
+
 
   useEffect(() => {
     const fetchProfilePic = async () => {
@@ -67,7 +66,7 @@ const Sidebar = ({ isOpen, toggle }) => {
 
   return (
     <div 
-        className={`d-flex flex-column bg-white border-end vh-100 p-3 sidebar-container ${isOpen ? 'open' : ''}`} 
+        className={`d-flex flex-column bg-white border-end p-3 sidebar-container ${isOpen ? 'open' : ''}`} 
         style={{ width: '280px', minWidth: '280px' }}
     >
       
@@ -83,7 +82,7 @@ const Sidebar = ({ isOpen, toggle }) => {
             </div>
         </div>
         
-        <button className="btn btn-sm text-secondary d-md-none" onClick={toggle}>
+        <button aria-label="Close navigation" className="btn btn-sm text-secondary d-md-none" onClick={toggle}>
             <FaTimes size={20} />
         </button>
       </div>

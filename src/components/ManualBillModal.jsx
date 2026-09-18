@@ -118,17 +118,17 @@ const ManualBillModal = ({ onClose, onSuccess }) => {
                         </div>
 
                         <div className="flex-grow-1 border rounded-3 bg-white shadow-sm overflow-auto" style={{ maxHeight: '400px' }}>
-                            {filteredResidents.map(user => (
+                            {filteredResidents.map(resident => (
                                 <div 
-                                    key={user.id} 
-                                    className={`d-flex align-items-center p-2 border-bottom transition-all ${selectedIds.includes(user.id) ? 'bg-primary-subtle' : ''}`}
-                                    onClick={() => toggleResident(user.id)}
+                                    key={resident.id} 
+                                    className={`d-flex align-items-center p-2 border-bottom transition-all ${selectedIds.includes(resident.id) ? 'bg-primary-subtle' : ''}`}
+                                    onClick={() => toggleResident(resident.id)}
                                     style={{ cursor: 'pointer' }}
                                 >
-                                    <input className="form-check-input ms-2" type="checkbox" checked={selectedIds.includes(user.id)} readOnly />
+                                    <input className="form-check-input ms-2" type="checkbox" checked={selectedIds.includes(resident.id)} readOnly />
                                     <div className="ms-3">
-                                        <div className="fw-bold text-dark small">{user.fullName}</div>
-                                        <div className="text-muted" style={{fontSize: '0.75rem'}}>Flat No: <span className="fw-bold">{user.flatNo}</span></div>
+                                        <div className="fw-bold text-dark small">{resident.fullName}</div>
+                                        <div className="text-muted" style={{fontSize: '0.75rem'}}>Flat No: <span className="fw-bold">{resident.flatNo}</span></div>
                                     </div>
                                 </div>
                             ))}

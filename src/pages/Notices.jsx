@@ -33,10 +33,14 @@ const Notices = () => {
     try {
       const res = await api.get('/notice');
       setNotices(res.data);
+      localStorage.setItem('cached_notices', JSON.stringify(res.data));
       setLoading(false);
     } catch (err) {
-      console.error("Failed to load notices");
-      toast.error("Failed to load data");
+      console.error("Failed to load notices, trying offline cache", err);
+      const cached = localStorage.getItem('cached_notices');
+      if (cached) {
+        setNotices(JSON.parse(cached));
+      }
       setLoading(false);
     }
   };
@@ -104,10 +108,7 @@ const Notices = () => {
   };
 
   return (
-    <div className="d-flex">
-      {/* <Sidebar /> */}
-      <div className="flex-grow-1 bg-light" style={{ minHeight: '100vh' }}>
-        
+    <>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold text-dark"><FaBullhorn className="me-2 text-primary" /> Notice Board</h2>
           
@@ -119,7 +120,21 @@ const Notices = () => {
         </div>
 
         <div className="row g-4">
-          {loading ? <p>Loading notices...</p> : notices.map((notice) => (
+          {loading ? (
+            Array.from({ length: 3 }).map((_, idx) => (
+              <div key={idx} className="col-md-6 col-lg-4">
+                <div className="card shadow-sm border-0 h-100 p-3">
+                  <div className="card-body">
+                    <div className="shimmer-placeholder shimmer-title w-75 mb-3" style={{ height: '1.25rem' }}></div>
+                    <div className="shimmer-placeholder shimmer-text w-50 mb-3" style={{ height: '0.75rem' }}></div>
+                    <div className="shimmer-placeholder shimmer-text w-100 mb-2"></div>
+                    <div className="shimmer-placeholder shimmer-text w-90 mb-2"></div>
+                    <div className="shimmer-placeholder shimmer-text w-60"></div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : notices.map((notice) => (
             <div key={notice.id || notice.noticeId} className="col-md-6 col-lg-4">
               <div className="card shadow-sm border-0 h-100"
               style={{ 
@@ -210,8 +225,8 @@ const Notices = () => {
                                 value={formData.content} 
                                 onChange={e => setFormData({...formData, content: e.target.value})}></textarea>
                     </div>
-                    <div className="row mb-3">
-                        <div className="col-6">
+                    <div className="row g-3 mb-3">
+                        <div className="col-12 col-md-6">
                             <label className="form-label small fw-bold text-muted">CATEGORY</label>
                             <select className="form-select" required 
                                 value={formData.category} 
@@ -223,7 +238,7 @@ const Notices = () => {
                                 <option value="Alert">Alert</option>
                             </select>
                         </div>
-                        <div className="col-6">
+                        <div className="col-12 col-md-6">
                             <label className="form-label small fw-bold text-muted">EXPIRY DATE</label>
                             <input type="date" className="form-control" required 
                                    value={formData.expiryDate} 
@@ -256,8 +271,7 @@ const Notices = () => {
           </div>
         )}
 
-      </div>
-    </div>
+    </>
   );
 };
 

@@ -41,7 +41,7 @@ const Register = () => {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center vh-100" style={{ backgroundColor: 'var(--bg-secondary, #f0f2f5)' }}>
+    <div className="d-flex align-items-center justify-content-center min-vh-100 py-4 py-md-0" style={{ backgroundColor: 'var(--bg-secondary, #f0f2f5)' }}>
       <div className="card border-0 shadow-lg" style={{ maxWidth: '450px', width: '100%', borderRadius: '15px' }}>
         <div className="card-body p-5">
           

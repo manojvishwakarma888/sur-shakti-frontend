@@ -79,10 +79,7 @@ const Complaints = () => {
   };
 
   return (
-    <div className="d-flex">
-      {/* <Sidebar /> */}
-      <div className="flex-grow-1 bg-light" style={{ minHeight: '100vh' }}>
-        
+    <>
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2><FaExclamationCircle className="me-2 text-danger" /> Helpdesk Tickets</h2>
           
@@ -120,6 +117,41 @@ const Complaints = () => {
                             <FaUser className="me-1"/> {item.raisedBy} (Flat {item.flatNo})
                           </span>
                         )}
+                      </div>
+
+                      {/* Stepper Timeline */}
+                      <div className="d-flex align-items-center mt-3 pt-1 mb-3" style={{ maxWidth: '400px' }}>
+                         <div className="d-flex align-items-center w-100 position-relative">
+                            
+                            {/* Step 1: Raised */}
+                            <div className="d-flex flex-column align-items-center position-relative" style={{ zIndex: 2 }}>
+                               <div className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style={{ width: '22px', height: '22px', fontSize: '0.7rem' }}>✓</div>
+                               <small className="fw-bold mt-1 text-dark" style={{ fontSize: '0.65rem' }}>Raised</small>
+                            </div>
+                            
+                            {/* Line 1 */}
+                            <div className="flex-grow-1" style={{ height: '2px', backgroundColor: '#198754', transform: 'translateY(-8px)', margin: '0 -5px' }}></div>
+                            
+                            {/* Step 2: In Review */}
+                            <div className="d-flex flex-column align-items-center position-relative" style={{ zIndex: 2 }}>
+                               <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm ${item.status === 'Resolved' || item.status === 'Closed' ? 'bg-success text-white' : 'bg-warning text-dark animate-pulse-warning'}`} style={{ width: '22px', height: '22px', fontSize: '0.7rem' }}>
+                                  {item.status === 'Resolved' || item.status === 'Closed' ? '✓' : '2'}
+                               </div>
+                               <small className="fw-bold mt-1 text-dark" style={{ fontSize: '0.65rem' }}>In Review</small>
+                            </div>
+                            
+                            {/* Line 2 */}
+                            <div className="flex-grow-1" style={{ height: '2px', backgroundColor: item.status === 'Resolved' || item.status === 'Closed' ? '#198754' : '#e2e8f0', transform: 'translateY(-8px)', margin: '0 -5px' }}></div>
+                            
+                            {/* Step 3: Resolved */}
+                            <div className="d-flex flex-column align-items-center position-relative" style={{ zIndex: 2 }}>
+                               <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm ${item.status === 'Resolved' || item.status === 'Closed' ? 'bg-success text-white' : 'bg-light text-muted border'}`} style={{ width: '22px', height: '22px', fontSize: '0.7rem' }}>
+                                  {item.status === 'Resolved' || item.status === 'Closed' ? '✓' : '3'}
+                               </div>
+                               <small className="fw-bold mt-1 text-dark" style={{ fontSize: '0.65rem' }}>Resolved</small>
+                            </div>
+                            
+                         </div>
                       </div>
 
                       {/* Show Resolution Remark if resolved */}
@@ -199,8 +231,7 @@ const Complaints = () => {
           </div>
         )}
 
-      </div>
-    </div>
+    </>
   );
 };
 

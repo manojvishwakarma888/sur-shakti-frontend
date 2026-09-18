@@ -52,7 +52,7 @@ const ReceiptModal = ({ bill, user, onClose }) => {
         </div>
 
         {/* --- RECEIPT CONTENT (Captured for PDF) --- */}
-        <div ref={receiptRef} className="p-5" style={{backgroundColor: '#fff', color: '#000'}}>
+        <div ref={receiptRef} className="p-5 receipt-print-area" style={{backgroundColor: '#fff', color: '#000'}}>
             
             {/* Society Header */}
             <div className="text-center mb-4 border-bottom pb-3">

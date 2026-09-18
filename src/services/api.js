@@ -4,9 +4,12 @@ import axiosRetry from 'axios-retry';
 import { toast } from 'react-toastify';
 
 
+export const BACKEND_URL = 'http://localhost:5236';
+export const API_URL = `${BACKEND_URL}/api`;
+
 // Create the Axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:5236/api', 
+  baseURL: API_URL, 
 });
 
 // --- LAYER 1: RETRY LOGIC (The "Blip") ---

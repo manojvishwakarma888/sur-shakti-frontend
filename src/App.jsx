@@ -17,6 +17,7 @@ import Profile from './pages/Profile';
 
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ChangePassword from './pages/ChangePassword';
 
 // Components
 import PrivateRoute from './components/PrivateRoute';
@@ -61,6 +62,7 @@ function App() {
               {/* --- FORGOT/RESET PASSWORD ROUTES --- */}
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/change-password" element={<PrivateRoute><ChangePassword /></PrivateRoute>} />
       
               {/* --- PRIVATE ROUTES WRAPPED IN LAYOUT --- */}
               <Route element={<Layout />}> 

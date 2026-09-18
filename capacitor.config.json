@@ -1,0 +1,6 @@
+{
+  "appId": "com.surshakti.connect",
+  "appName": "Sur Shakti Connect",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

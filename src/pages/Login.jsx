@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom'; 
-import api from '../services/api'; 
+import api, { BACKEND_URL } from '../services/api'; 
 import { FaBuilding, FaEnvelope, FaLock } from 'react-icons/fa'; 
 import { toast } from 'react-toastify';
+import { isPasswordUpdateDue } from '../utils/passwordPolicy';
 import './Login.css';
 
 // 🟢 CONFIG: Ensure this matches your .NET Backend Port exactly
-const IMAGE_BASE = "http://localhost:5236/"; 
+const IMAGE_BASE = `${BACKEND_URL}/`; 
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -53,8 +54,11 @@ const Login = () => {
       setIsLoading(false);
 
       if (response) {
-        if (response.mustChangePassword) {
-          toast.info("Security check: Please update your temporary password.");
+        const loginEmail = response.email || response.Email || email;
+        const passwordDue = isPasswordUpdateDue(loginEmail);
+
+        if (passwordDue) {
+          toast.info("Password update reminder: please refresh your password (30-day policy).");
           navigate('/change-password'); 
         } else {
           navigate('/dashboard');

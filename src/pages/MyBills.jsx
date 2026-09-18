@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import api from '../services/api';
 import PaymentModal from '../components/PaymentModal';
+import WhatsAppReminderModal from '../components/WhatsAppReminderModal';
 import ReceiptModal from '../components/ReceiptModal';
 import ManualBillModal from '../components/ManualBillModal';
 import { AuthContext } from '../context/AuthContext';
@@ -9,6 +10,54 @@ import {
   FaUser, FaDownload, FaWhatsapp, FaHistory, 
   FaPlus, FaTimes, FaCheck, FaPen, FaFileCsv 
 } from 'react-icons/fa';
+
+const PAYMENT_AUDIT_STORAGE_KEY = 'surshakti_payment_audit_v1';
+
+const safeParseJson = (value, fallback = []) => {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
+
+const readPaymentAudit = () => {
+  const data = localStorage.getItem(PAYMENT_AUDIT_STORAGE_KEY);
+  const parsed = safeParseJson(data, []);
+  return Array.isArray(parsed) ? parsed : [];
+};
+
+const writePaymentAudit = (records) => {
+  localStorage.setItem(PAYMENT_AUDIT_STORAGE_KEY, JSON.stringify(records));
+};
+
+const normalizeTxnId = (value) => String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+const normalizeBillId = (value) => String(value ?? '').trim();
+const createIdempotencyKey = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `idem-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+};
+
+const billIsPaid = (bill) => {
+  const flag = bill.isPaid ?? bill.IsPaid;
+  return flag === true || flag === 1 || flag === '1';
+};
+
+const billTxnId = (bill) => normalizeTxnId(bill.transactionId || bill.TransactionId || '');
+const billPrimaryId = (bill) => normalizeBillId(bill.billId || bill.BillId);
+const extractTransactionEntityId = (payload) => {
+  if (!payload) return null;
+  return (
+    payload.id ||
+    payload.transactionId ||
+    payload.paymentTransactionId ||
+    payload.transaction?.id ||
+    payload.data?.id ||
+    null
+  );
+};
 
 const MyBills = () => {
   const { user } = useContext(AuthContext);
@@ -20,7 +69,9 @@ const MyBills = () => {
 
   const [selectedBill, setSelectedBill] = useState(null);
   const [receiptBill, setReceiptBill] = useState(null);
+  const [reminderBill, setReminderBill] = useState(null);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [unsyncedPayments, setUnsyncedPayments] = useState(0);
 
   // --- EDIT STATE ---
   const [showEditModal, setShowEditModal] = useState(false);
@@ -50,24 +101,174 @@ const MyBills = () => {
     fetchBills();
   }, []);
 
+  const createPaymentTransaction = async ({ billId, amount, method, idempotencyKey }) => {
+    const payload = {
+      billId: Number(billId),
+      amountPaid: Number(amount || 0),
+      paymentMode: method || 'UPI',
+      idempotencyKey,
+    };
+
+    const res = await api.post('/payment-transactions/create', payload);
+    const entityId = extractTransactionEntityId(res.data);
+    if (!entityId) {
+      throw new Error('Create transaction response is missing transaction ID.');
+    }
+    return String(entityId);
+  };
+
+  const submitPaymentTransaction = async ({ paymentTransactionId, transactionId }) => {
+    await api.post(`/payment-transactions/${paymentTransactionId}/submit`, {
+      transactionReferenceId: transactionId,
+    });
+  };
+
+  const manualVerifyPaymentTransaction = async ({ paymentTransactionId, transactionId }) => {
+    await api.post(`/payment-transactions/admin/${paymentTransactionId}/manual-verify`, {
+      notes: transactionId ? `Cash payment verified by admin. Reference: ${transactionId}` : 'Cash payment verified by admin.',
+    });
+  };
+
+  const updateUnsyncedCount = () => {
+    const records = readPaymentAudit();
+    const count = records.filter((record) => record.status !== 'synced').length;
+    setUnsyncedPayments(count);
+  };
+
+  const syncStoredPaymentAttempts = async (serverBills = []) => {
+    const records = readPaymentAudit();
+    if (records.length === 0) {
+      setUnsyncedPayments(0);
+      return;
+    }
+
+    const paidBillIds = new Set(
+      (serverBills || [])
+        .filter(billIsPaid)
+        .map(billPrimaryId)
+        .filter(Boolean)
+    );
+
+    const serverTxnIds = new Set(
+      (serverBills || [])
+        .map(billTxnId)
+        .filter(Boolean)
+    );
+
+    const updatedRecords = [...records];
+    let syncedNow = 0;
+
+    for (let i = 0; i < updatedRecords.length; i++) {
+      const record = updatedRecords[i];
+      const recBillId = normalizeBillId(record.billId);
+      const recTxnId = normalizeTxnId(record.transactionId);
+
+      if (!recBillId || !recTxnId) {
+        updatedRecords[i] = {
+          ...record,
+          status: 'failed',
+          lastError: 'Invalid stored payment record.',
+          retryCount: (record.retryCount || 0) + 1,
+          updatedAt: new Date().toISOString(),
+        };
+        continue;
+      }
+
+      if (paidBillIds.has(recBillId) || serverTxnIds.has(recTxnId)) {
+        if (record.status !== 'synced') syncedNow += 1;
+        updatedRecords[i] = {
+          ...record,
+          status: 'synced',
+          syncedAt: new Date().toISOString(),
+          lastError: null,
+          updatedAt: new Date().toISOString(),
+        };
+        continue;
+      }
+
+      try {
+        let paymentTransactionId = record.paymentTransactionId;
+        if (!paymentTransactionId) {
+          const recordIdem = record.idempotencyKey || createIdempotencyKey();
+          paymentTransactionId = await createPaymentTransaction({
+            billId: recBillId,
+            amount: record.amount,
+            month: record.month,
+            method: record.method || 'UPI',
+            idempotencyKey: recordIdem,
+          });
+          updatedRecords[i] = {
+            ...updatedRecords[i],
+            idempotencyKey: recordIdem,
+            paymentTransactionId,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+
+        if ((record.method || 'UPI').toUpperCase() === 'CASH') {
+          await manualVerifyPaymentTransaction({
+            paymentTransactionId,
+            transactionId: recTxnId || null,
+          });
+        } else {
+          await submitPaymentTransaction({
+            paymentTransactionId,
+            transactionId: recTxnId,
+          });
+        }
+
+        syncedNow += 1;
+        updatedRecords[i] = {
+          ...record,
+          transactionId: recTxnId,
+          status: 'synced',
+          syncedAt: new Date().toISOString(),
+          lastError: null,
+          updatedAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        updatedRecords[i] = {
+          ...record,
+          status: 'failed',
+          retryCount: (record.retryCount || 0) + 1,
+          lastError: err?.response?.data?.message || err?.message || 'Unable to sync payment record.',
+          updatedAt: new Date().toISOString(),
+        };
+      }
+    }
+
+    writePaymentAudit(updatedRecords);
+    updateUnsyncedCount();
+
+    if (syncedNow > 0) {
+      toast.success(`${syncedNow} stored payment ${syncedNow > 1 ? 'records were' : 'record was'} synced.`);
+    }
+  };
+
   const fetchBills = async () => {
     try {
       const res = await api.get('Bill');
       setBills(res.data);
+      await syncStoredPaymentAttempts(res.data || []);
     } catch (err) {
       toast.error("Could not load bills.");
+      updateUnsyncedCount();
     } finally {
       setLoading(false);
     }
   };
 
   const filteredBills = bills.filter(bill => {
-    const isPaid = bill.isPaid ?? bill.IsPaid;
+    const isPaid = billIsPaid(bill);
     const billMonth = bill.month || bill.Month || "";
     const matchesStatus = filterStatus === 'All' || (filterStatus === 'Paid' && isPaid === true) || (filterStatus === 'Unpaid' && isPaid === false);
     let matchesMonth = filterMonth === 'All' ? true : filterMonth === 'Others' ? !displayMonths.includes(billMonth) : billMonth === filterMonth;
     return matchesStatus && matchesMonth;
   });
+
+  if (isAdmin) {
+    filteredBills.sort((a, b) => Number(billIsPaid(a)) - Number(billIsPaid(b)));
+  }
 
   // --- ACTIONS ---
   const handleOpenPayment = (bill) => setSelectedBill(bill);
@@ -115,26 +316,167 @@ const MyBills = () => {
 
   const handleMarkAsPaid = async (bill) => {
     if (!window.confirm("Confirm CASH payment?")) return;
+
+    const normalizedBillId = normalizeBillId(bill.billId || bill.BillId);
+    const cashTxnId = `CASH-${normalizedBillId}-${Date.now()}`;
+    const localRecordId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const idempotencyKey = createIdempotencyKey();
+
+    const newRecord = {
+      localRecordId,
+      billId: normalizedBillId,
+      transactionId: cashTxnId,
+      amount: Number(bill.amount || bill.Amount || 0),
+      month: bill.month || bill.Month || null,
+      method: 'CASH',
+      idempotencyKey,
+      status: 'pending',
+      retryCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      userId: normalizeBillId(user?.id || user?.userId || user?.UserId || ''),
+    };
+
+    const existing = readPaymentAudit();
+    writePaymentAudit([...existing, newRecord]);
+    updateUnsyncedCount();
+
     try {
-      await api.put(`Bill/${bill.billId}/pay`, { IsPaid: true });
+      const paymentTransactionId = await createPaymentTransaction({
+        billId: normalizedBillId,
+        amount: newRecord.amount,
+        month: newRecord.month,
+        method: 'CASH',
+        idempotencyKey,
+      });
+
+      await manualVerifyPaymentTransaction({
+        paymentTransactionId,
+        transactionId: cashTxnId,
+      });
+
+      const updated = readPaymentAudit().map((record) => {
+        if (record.localRecordId !== localRecordId) return record;
+        return {
+          ...record,
+          paymentTransactionId,
+          status: 'synced',
+          syncedAt: new Date().toISOString(),
+          lastError: null,
+          updatedAt: new Date().toISOString(),
+        };
+      });
+      writePaymentAudit(updated);
+      updateUnsyncedCount();
+
       toast.success("Marked as Paid");
       fetchBills();
     } catch (err) {
-      toast.error("Failed to update status.");
+      const updated = readPaymentAudit().map((record) => {
+        if (record.localRecordId !== localRecordId) return record;
+        return {
+          ...record,
+          status: 'failed',
+          retryCount: (record.retryCount || 0) + 1,
+          lastError: err?.response?.data?.message || err?.message || 'Unable to sync cash payment.',
+          updatedAt: new Date().toISOString(),
+        };
+      });
+      writePaymentAudit(updated);
+      updateUnsyncedCount();
+
+      toast.warning('Cash payment record stored locally. Please retry sync.');
+    }
+  };
+
+  const handlePaymentComplete = async ({ billId, transactionId, amount, month }) => {
+    const normalizedBillId = normalizeBillId(billId);
+    const normalizedTxnId = normalizeTxnId(transactionId);
+
+    const serverTxnIds = new Set(bills.map(billTxnId).filter(Boolean));
+    const localTxnIds = new Set(readPaymentAudit().map((record) => normalizeTxnId(record.transactionId)).filter(Boolean));
+    if (serverTxnIds.has(normalizedTxnId) || localTxnIds.has(normalizedTxnId)) {
+      toast.error('This transaction ID already exists. Please verify your UTR and try again.');
+      return;
+    }
+
+    const localRecordId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    const newRecord = {
+      localRecordId,
+      billId: normalizedBillId,
+      transactionId: normalizedTxnId,
+      amount: Number(amount || 0),
+      month: month || null,
+      method: 'UPI',
+      idempotencyKey: createIdempotencyKey(),
+      status: 'pending',
+      retryCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      userId: normalizeBillId(user?.id || user?.userId || user?.UserId || ''),
+    };
+
+    const existing = readPaymentAudit();
+    writePaymentAudit([...existing, newRecord]);
+    updateUnsyncedCount();
+
+    try {
+      const paymentTransactionId = await createPaymentTransaction({
+        billId: normalizedBillId,
+        amount: Number(amount || 0),
+        month: month || null,
+        method: 'UPI',
+        idempotencyKey: newRecord.idempotencyKey,
+      });
+
+      await submitPaymentTransaction({
+        paymentTransactionId,
+        transactionId: normalizedTxnId,
+      });
+
+      const updated = readPaymentAudit().map((record) => {
+        if (record.localRecordId !== localRecordId) return record;
+        return {
+          ...record,
+          paymentTransactionId,
+          status: 'synced',
+          syncedAt: new Date().toISOString(),
+          lastError: null,
+          updatedAt: new Date().toISOString(),
+        };
+      });
+      writePaymentAudit(updated);
+      updateUnsyncedCount();
+
+      toast.success("Payment submitted successfully!");
+      setSelectedBill(null);
+      fetchBills();
+    } catch (err) {
+      const updated = readPaymentAudit().map((record) => {
+        if (record.localRecordId !== localRecordId) return record;
+        return {
+          ...record,
+          status: 'failed',
+          retryCount: (record.retryCount || 0) + 1,
+          lastError: err?.response?.data?.message || err?.message || 'Unable to sync payment record.',
+          updatedAt: new Date().toISOString(),
+        };
+      });
+      writePaymentAudit(updated);
+      updateUnsyncedCount();
+
+      toast.warning('Payment saved locally. We will retry syncing when bills are refreshed.');
+      setSelectedBill(null);
     }
   };
 
   const handleWhatsAppRemind = (bill) => {
-    let num = (bill.phoneNumber || bill.User?.PhoneNumber || "").toString().replace(/\D/g, '');
-    if (num.length === 10) num = "91" + num;
-    const msg = `*Sur Shakti Residency*\nPending: *${bill.month}*\nAmount: *₹${bill.amount}*`;
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+    if (isAdmin && !billIsPaid(bill)) setReminderBill(bill);
   };
 
   return (
-    <div className="flex-grow-1 bg-light p-3 p-md-4" style={{ minHeight: '100vh' }}>
-      
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <>
+      <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-4">
         <h2 className="fw-bold mb-0">{isAdmin ? 'Society Billing' : 'My Payments'}</h2>
         {isAdmin && (
           <button className="btn btn-dark fw-bold btn-sm" onClick={() => setShowGenerateModal(true)}>
@@ -142,6 +484,21 @@ const MyBills = () => {
           </button>
         )}
       </div>
+
+      {unsyncedPayments > 0 && (
+        <div className="alert alert-warning d-flex justify-content-between align-items-center rounded-4 shadow-sm" role="alert">
+          <div className="small fw-semibold mb-0">
+            {unsyncedPayments} payment {unsyncedPayments > 1 ? 'records are' : 'record is'} stored locally and waiting to sync.
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-dark"
+            onClick={fetchBills}
+          >
+            Retry Sync
+          </button>
+        </div>
+      )}
 
       <div className="bg-white p-3 rounded-4 shadow-sm mb-4">
         <div className="row g-3 align-items-end">
@@ -169,7 +526,9 @@ const MyBills = () => {
 
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div className="card-body p-0">
-          <div className="table-responsive">
+          
+          {/* Desktop Table View */}
+          <div className="d-none d-md-block table-responsive">
             <table className="table table-hover align-middle mb-0">
               <thead className="bg-light">
                 <tr className="small text-uppercase text-muted">
@@ -183,9 +542,23 @@ const MyBills = () => {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan="6" className="text-center p-4">Loading bills...</td></tr>
+                  Array.from({ length: 3 }).map((_, idx) => (
+                    <tr key={idx}>
+                      {isAdmin && (
+                        <td className="ps-4">
+                          <div className="shimmer-placeholder shimmer-title w-75"></div>
+                          <div className="shimmer-placeholder shimmer-text w-50" style={{ height: '0.65rem' }}></div>
+                        </td>
+                      )}
+                      <td><div className="shimmer-placeholder shimmer-title w-50" style={{ height: '1rem' }}></div></td>
+                      <td><div className="shimmer-placeholder shimmer-badge"></div></td>
+                      <td><div className="shimmer-placeholder shimmer-text w-25" style={{ height: '1rem' }}></div></td>
+                      <td><div className="shimmer-placeholder shimmer-badge"></div></td>
+                      <td className="text-end pe-4"><div className="shimmer-placeholder shimmer-btn float-end"></div></td>
+                    </tr>
+                  ))
                 ) : filteredBills.length > 0 ? filteredBills.map(bill => {
-                  const isPaid = bill.isPaid ?? bill.IsPaid;
+                  const isPaid = billIsPaid(bill);
                   const type = bill.billType || bill.BillType || 'Maintenance';
                   return (
                     <tr key={bill.billId}>
@@ -204,7 +577,7 @@ const MyBills = () => {
                         </span>
                       </td>
                       <td className="text-end pe-4">
-                        <div className="d-flex justify-content-end gap-2">
+                        <div className="d-flex flex-wrap justify-content-end gap-2">
                           {isPaid ? (
                             <button className="btn btn-light btn-sm rounded-circle border shadow-sm" onClick={() => handleOpenReceipt(bill)} title="Download Receipt">
                               <FaDownload size={14} className="text-secondary" />
@@ -216,8 +589,8 @@ const MyBills = () => {
                                   <button className="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" onClick={() => openEditModal(bill)} title="Edit Bill">
                                     <FaPen size={12} />
                                   </button>
-                                  <button className="btn btn-outline-success btn-sm rounded-circle shadow-sm" onClick={() => handleWhatsAppRemind(bill)} title="WhatsApp Reminder">
-                                    <FaWhatsapp size={16} />
+                                  <button className="btn btn-outline-success btn-sm rounded-pill shadow-sm" onClick={() => handleWhatsAppRemind(bill)} aria-label="Send reminder on WhatsApp" title="Send reminder on WhatsApp">
+                                    <FaWhatsapp size={16} className="me-1" />Remind
                                   </button>
                                   <button className="btn btn-outline-primary btn-sm rounded-circle shadow-sm" onClick={() => handleMarkAsPaid(bill)} title="Mark Paid (Cash)">
                                     <FaCheck size={14} />
@@ -238,8 +611,83 @@ const MyBills = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card Stack View */}
+          <div className="d-block d-md-none mobile-bill-list">
+            {loading ? (
+              Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} className="mobile-bill-card border-bottom bg-white">
+                  <div className="shimmer-placeholder shimmer-title w-75 mb-2" style={{ height: '1.25rem' }}></div>
+                  <div className="shimmer-placeholder shimmer-text w-50 mb-2"></div>
+                  <div className="shimmer-placeholder shimmer-badge"></div>
+                </div>
+              ))
+            ) : filteredBills.length > 0 ? (
+              filteredBills.map(bill => {
+                const isPaid = billIsPaid(bill);
+                const type = bill.billType || bill.BillType || 'Maintenance';
+                return (
+                  <div key={bill.billId} className="mobile-bill-card border-bottom bg-white">
+                    <div className="mobile-bill-header">
+                      <div>
+                        {isAdmin ? (
+                          <>
+                            <div className="fw-bold text-dark">{bill.residentName}</div>
+                            <div className="text-muted small">Flat {bill.flatNo} • {bill.month}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="fw-bold text-dark">{bill.month}</div>
+                            <div className="text-muted small">{type} Bill</div>
+                          </>
+                        )}
+                      </div>
+                      <span className={`badge rounded-pill px-3 ${isPaid ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger'}`}>
+                        {isPaid ? 'Paid' : 'Unpaid'}
+                      </span>
+                    </div>
+                    
+                    <div className="mobile-bill-footer">
+                      <div className="fw-bold text-primary fs-5">₹{bill.amount}</div>
+                      
+                      <div className="mobile-bill-actions">
+                        {isPaid ? (
+                          <button className="btn btn-light btn-sm rounded-pill border px-3" onClick={() => handleOpenReceipt(bill)}>
+                            <FaDownload className="me-1 text-secondary" size={12} /> Receipt
+                          </button>
+                        ) : (
+                          <>
+                            {isAdmin ? (
+                              <>
+                                <button className="btn btn-outline-secondary btn-sm bill-edit-button" aria-label="Edit bill" onClick={() => openEditModal(bill)} title="Edit Bill">
+                                  <FaPen size={12} />
+                                </button>
+                                <button className="btn btn-outline-success btn-sm rounded-pill" onClick={() => handleWhatsAppRemind(bill)} aria-label="Send reminder on WhatsApp" title="Send reminder on WhatsApp">
+                                  <FaWhatsapp size={16} className="me-1" />Remind
+                                </button>
+                                <button className="btn btn-outline-primary btn-sm rounded-pill px-3" onClick={() => handleMarkAsPaid(bill)}>
+                                  <FaCheck className="me-1" size={12} /> Cash
+                                </button>
+                              </>
+                            ) : (
+                              <button className="btn btn-primary btn-sm rounded-pill px-4 fw-bold" onClick={() => handleOpenPayment(bill)}>Pay Now</button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center p-4 text-muted bg-white">No bills found.</div>
+            )}
+          </div>
+
         </div>
       </div>
+
+      {reminderBill && <WhatsAppReminderModal bill={reminderBill} onClose={() => setReminderBill(null)} />}
 
       {/* --- EDIT MODAL --- */}
       {showEditModal && (
@@ -273,7 +721,7 @@ const MyBills = () => {
                   <option value="Event">Event</option>
                 </select>
               </div>
-              <div className="d-flex gap-2">
+              <div className="d-flex flex-wrap gap-2">
                 <button type="submit" className="btn btn-dark w-100 fw-bold">Update</button>
                 <button type="button" className="btn btn-light w-100" onClick={() => setShowEditModal(false)}>Cancel</button>
               </div>
@@ -283,9 +731,9 @@ const MyBills = () => {
       )}
 
       {showGenerateModal && <ManualBillModal onClose={() => setShowGenerateModal(false)} onSuccess={fetchBills} />}
-      {selectedBill && <PaymentModal bill={selectedBill} onClose={() => setSelectedBill(null)} onPaymentComplete={() => fetchBills()} />}
+      {selectedBill && <PaymentModal bill={selectedBill} onClose={() => setSelectedBill(null)} onPaymentComplete={handlePaymentComplete} />}
       {receiptBill && <ReceiptModal bill={receiptBill} user={user} onClose={() => setReceiptBill(null)} />}
-    </div>
+    </>
   );
 };
 

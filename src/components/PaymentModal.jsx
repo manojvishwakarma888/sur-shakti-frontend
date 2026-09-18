@@ -5,6 +5,7 @@ import { FaTimes, FaCopy } from 'react-icons/fa';
 const PaymentModal = ({ bill, onClose, onPaymentComplete }) => {
   const [step, setStep] = useState(1); // 1: Scan, 2: Confirm
   const [transactionId, setTransactionId] = useState('');
+  const [validationError, setValidationError] = useState('');
 
   // --- CONFIGURATION ---
   // REPLACE THIS with your actual UPI ID (e.g., yourname@oksbi)
@@ -18,10 +19,27 @@ const PaymentModal = ({ bill, onClose, onPaymentComplete }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!transactionId) return alert("Please enter the Transaction ID.");
+    const normalizedTxn = transactionId.trim().toUpperCase().replace(/\s+/g, '');
+    const isValidTxn = /^[A-Z0-9]{8,30}$/.test(normalizedTxn);
+    if (!isValidTxn) {
+      setValidationError('Please enter a valid UTR (8-30 letters/numbers).');
+      return;
+    }
+    setValidationError('');
+    setTransactionId(normalizedTxn);
     
-    // Call parent function to update Backend
-    onPaymentComplete(bill.billId || bill.BillId, transactionId);
+    // Go to animated checkmark step
+    setStep(3);
+
+    // Call parent function to update Backend after showing visual success checkmark
+    setTimeout(() => {
+      onPaymentComplete({
+        billId: bill.billId || bill.BillId,
+        transactionId: normalizedTxn,
+        amount: bill.amount || bill.Amount,
+        month: bill.month || bill.Month,
+      });
+    }, 2200);
   };
 
   return (
@@ -33,13 +51,24 @@ const PaymentModal = ({ bill, onClose, onPaymentComplete }) => {
         {/* Header */}
         <div className="bg-primary p-3 d-flex justify-content-between align-items-center text-white">
           <h5 className="mb-0 fw-bold">Pay Maintenance</h5>
-          <button onClick={onClose} className="btn btn-sm text-white opacity-75"><FaTimes size={20}/></button>
+          {step !== 3 && (
+            <button onClick={onClose} className="btn btn-sm text-white opacity-75"><FaTimes size={20}/></button>
+          )}
         </div>
 
         {/* Body */}
         <div className="p-4 text-center">
           
-          {step === 1 ? (
+          {step === 3 ? (
+            <div className="py-4 d-flex flex-column align-items-center justify-content-center">
+              <svg className="mb-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" style={{ width: '80px', height: '80px' }}>
+                 <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                 <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+              <h4 className="fw-bold text-success mb-2">Payment Submitted!</h4>
+              <p className="text-muted small px-3">Your transaction ID <strong className="text-dark">{transactionId}</strong> has been logged for review.</p>
+            </div>
+          ) : step === 1 ? (
             <>
               <p className="text-muted mb-3">Scan with <strong>PhonePe, GPay, or Paytm</strong></p>
               
@@ -70,10 +99,14 @@ const PaymentModal = ({ bill, onClose, onPaymentComplete }) => {
                   className="form-control" 
                   placeholder="e.g. 302518291029" 
                   value={transactionId}
-                  onChange={(e) => setTransactionId(e.target.value)}
+                  onChange={(e) => {
+                    setTransactionId(e.target.value);
+                    if (validationError) setValidationError('');
+                  }}
                   required 
                 />
-                <div className="form-text small">Found in your payment app history.</div>
+                <div className="form-text small">Found in your payment app history. Example: 302518291029</div>
+                {validationError && <div className="text-danger small mt-1">{validationError}</div>}
               </div>
               
               <div className="d-flex gap-2">

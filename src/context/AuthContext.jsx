@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { jwtDecode } from "jwt-decode"; 
 import Cookies from 'js-cookie'; 
+import { API_URL } from '../services/api';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -53,7 +54,7 @@ const decodeAndSetUser = (token) => {
 
   const login = async (email, password) => {
     try {     
-      const response = await fetch('http://localhost:5236/api/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -69,14 +70,14 @@ const decodeAndSetUser = (token) => {
         localStorage.removeItem('token'); 
         
         decodeAndSetUser(data.token);
-        return true;
+        return data;
       } else {
         alert(data.message || "Login Failed");
-        return false;
+        return null;
       }
     } catch (error) {
       console.error("Login Error", error);
-      return false;
+      return null;
     }
   };
 

@@ -21,7 +21,7 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+        <div className="d-flex justify-content-center align-items-center min-vh-100 py-4 py-md-0 bg-light">
             <div className="card p-4 shadow-sm border-0 rounded-4" style={{width: '400px'}}>
                 <h3 className="fw-bold mb-2">Forgot Password?</h3>
                 <p className="text-muted small mb-4">Enter your registered email address and we'll send you a link to reset your password.</p>

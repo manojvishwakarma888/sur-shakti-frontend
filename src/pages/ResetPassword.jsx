@@ -37,7 +37,7 @@ const ResetPassword = () => {
     };
 
     return (
-        <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+        <div className="d-flex justify-content-center align-items-center min-vh-100 py-4 py-md-0 bg-light">
             <div className="card p-4 shadow-sm border-0 rounded-4" style={{width: '400px'}}>
                 <h3 className="fw-bold mb-3">Set New Password</h3>
                 <form onSubmit={handleSubmit}>

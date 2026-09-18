@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { FaUserCircle, FaLock, FaPhone, FaSave, FaCamera } from 'react-icons/fa';
+import { markPasswordUpdatedNow } from '../utils/passwordPolicy';
 
 const Profile = () => {
   const { user } = useContext(AuthContext);
@@ -82,6 +83,7 @@ const Profile = () => {
         currentPassword: passData.currentPassword,
         newPassword: passData.newPassword
       });
+      markPasswordUpdatedNow(user?.email);
       toast.success("Password changed!");
       setPassData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
@@ -92,10 +94,7 @@ const Profile = () => {
   if (loading) return <div className="d-flex justify-content-center mt-5">Loading...</div>;
 
   return (
-    <div className="d-flex">
-      {/* <Sidebar /> */}
-      <div className="flex-grow-1 bg-light" style={{ minHeight: '100vh' }}>
-        
+    <>
         <h2 className="fw-bold text-dark mb-4">Account Settings</h2>
 
         <div className="row g-4">
@@ -179,8 +178,7 @@ const Profile = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </>
   );
 };
 
