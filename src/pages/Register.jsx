@@ -1,3 +1,4 @@
+import BrandLogo from '../components/BrandLogo';
 import React, { useState } from 'react';
 import api from '../services/api';
 import { Link, useNavigate } from 'react-router-dom';
@@ -46,9 +47,7 @@ const Register = () => {
         <div className="card-body p-5">
           
           <div className="text-center mb-4">
-            <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-3 mb-3">
-               <FaBuilding size={30} />
-            </div>
+            <BrandLogo size={128} className="mb-3" />
             <h3 className="fw-bold text-dark">Join Sur Shakti</h3>
             <p className="text-muted small">Resident Self-Registration</p>
           </div>
@@ -64,7 +63,7 @@ const Register = () => {
             <div className="row g-2 mb-3">
               <div className="col-6 input-group">
                 <span className="input-group-text bg-light border-0"><FaBuilding className="text-muted"/></span>
-                <input type="text" name="flatNo" className="form-control bg-light border-0" placeholder="Flat No" required onChange={handleChange} />
+                <input type="text" name="flatNo" className="form-control bg-light border-0" placeholder="Row House No" required onChange={handleChange} />
               </div>
               <div className="col-6 input-group">
                 <span className="input-group-text bg-light border-0"><FaPhone className="text-muted"/></span>

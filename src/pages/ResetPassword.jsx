@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import api, { getApiErrorMessage } from '../services/api';
 import { toast } from 'react-toastify';
 
 const ResetPassword = () => {
@@ -17,6 +17,8 @@ const ResetPassword = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!email || !token) return toast.error('This password setup link is incomplete. Ask an administrator to resend it.');
+        if (newPassword.length < 6) return toast.error('Password must contain at least 6 characters.');
         if(newPassword !== confirmPassword) return toast.error("Passwords do not match");
 
         setLoading(true);
@@ -30,7 +32,7 @@ const ResetPassword = () => {
             navigate('/login');
         } catch (err) {
             console.error(err);
-            toast.error("Failed to reset password. The link may be expired or invalid.");
+            toast.error(getApiErrorMessage(err, 'Failed to set password. The link may be expired or invalid.'));
         } finally {
             setLoading(false);
         }
@@ -39,19 +41,21 @@ const ResetPassword = () => {
     return (
         <div className="d-flex justify-content-center align-items-center min-vh-100 py-4 py-md-0 bg-light">
             <div className="card p-4 shadow-sm border-0 rounded-4" style={{width: '400px'}}>
-                <h3 className="fw-bold mb-3">Set New Password</h3>
+                <h3 className="fw-bold mb-2">Set your password</h3>
+                <p className="text-muted small mb-3">Create a password to activate your Sur Shakti account.</p>
+                {(!email || !token) && <div className="alert alert-danger small">This link is invalid or incomplete. Ask an administrator to resend your setup invitation.</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                         <label className="form-label fw-bold small text-muted">NEW PASSWORD</label>
-                        <input type="password" className="form-control" required
+                        <input type="password" className="form-control" required minLength={6} autoComplete="new-password"
                             value={newPassword} onChange={e => setNewPassword(e.target.value)} />
                     </div>
                     <div className="mb-4">
                         <label className="form-label fw-bold small text-muted">CONFIRM PASSWORD</label>
-                        <input type="password" className="form-control" required
+                        <input type="password" className="form-control" required minLength={6} autoComplete="new-password"
                             value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                     </div>
-                    <button className="btn btn-success w-100 fw-bold py-2" disabled={loading}>
+                    <button className="btn btn-success w-100 fw-bold py-2" disabled={loading || !email || !token}>
                         {loading ? 'Resetting...' : 'Reset Password'}
                     </button>
                 </form>

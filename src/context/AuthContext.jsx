@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { jwtDecode } from "jwt-decode"; 
 import Cookies from 'js-cookie'; 
-import { API_URL } from '../services/api';
+import api from '../services/api';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -54,15 +54,9 @@ const decodeAndSetUser = (token) => {
 
   const login = async (email, password) => {
     try {     
-      const response = await fetch(`${API_URL}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-      });
-      
-      const data = await response.json();
-
-      if (response.ok) {
+      const response = await api.post('/Auth/login', { email, password });
+      const data = response.data;
+      if (data?.token) {
         // ✅ 2. Set Cookie (Expires in 7 days)
         Cookies.set('token', data.token, { expires: 7 });
 
@@ -71,10 +65,8 @@ const decodeAndSetUser = (token) => {
         
         decodeAndSetUser(data.token);
         return data;
-      } else {
-        alert(data.message || "Login Failed");
-        return null;
       }
+      return null;
     } catch (error) {
       console.error("Login Error", error);
       return null;

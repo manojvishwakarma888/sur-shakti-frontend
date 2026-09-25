@@ -1,5 +1,6 @@
+import ExpenseWorkflow from '../components/ExpenseWorkflow';
 import React, { useEffect, useState, useContext } from 'react';
-import api, { BACKEND_URL } from '../services/api';
+import api, { getApiErrorMessage, openAuthenticatedFile } from '../services/api';
 // import Sidebar from '../components/Sidebar'; // Uncomment if needed
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -7,6 +8,7 @@ import { FaPlus, FaTrash, FaTimes, FaUpload, FaFileInvoice } from 'react-icons/f
 
 const Expenses = () => {
     const { user } = useContext(AuthContext);
+    const [workflowVersion, setWorkflowVersion] = useState(0);
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -34,7 +36,7 @@ const Expenses = () => {
             setExpenses(res.data);
             setLoading(false);
         } catch (err) {
-            toast.error("Failed to load expenses.");
+            toast.error(getApiErrorMessage(err, "Failed to load expenses."));
             setLoading(false);
         }
     };
@@ -42,7 +44,17 @@ const Expenses = () => {
     // --- 1. HANDLE FILE SELECTION ---
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
-            setFormData({ ...formData, receiptFile: e.target.files[0] });
+            const selected = e.target.files[0];
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+            if (!allowedTypes.includes(selected.type)) {
+                e.target.value = '';
+                return toast.error('Choose a JPEG, PNG, WebP, or PDF receipt.');
+            }
+            if (selected.size > 5 * 1024 * 1024) {
+                e.target.value = '';
+                return toast.error('Receipt must be 5 MB or smaller.');
+            }
+            setFormData({ ...formData, receiptFile: selected });
         }
     };
 
@@ -72,7 +84,7 @@ const Expenses = () => {
 
             toast.success("Expense Added Successfully!");
             setShowModal(false);
-            fetchExpenses(); // Refresh list
+            fetchExpenses(); setWorkflowVersion(v => v + 1); // Refresh list
 
             // Reset Form
             setFormData({
@@ -83,20 +95,20 @@ const Expenses = () => {
 
         } catch (err) {
             console.error(err);
-            toast.error("Failed to add expense.");
+            toast.error(getApiErrorMessage(err, 'Failed to add expense.'));
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this record?")) return;
+        if (!window.confirm("Cancel this expense? The invoice and audit history will be retained.")) return;
         try {
             await api.delete(`Expense/${id}`);
-            toast.success("Deleted successfully");
+            toast.success("Expense cancelled");
             fetchExpenses();
         } catch (err) {
-            toast.error("Delete failed.");
+            toast.error(getApiErrorMessage(err, "Cancellation failed."));
         }
     };
 
@@ -122,8 +134,8 @@ const Expenses = () => {
     }).filter(item => item.amount > 0);
 
     return (
-        <>
-                <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="expenses-screen">
+                <div className="page-heading">
                     <h2 className="fw-bold text-dark">Society Expenses</h2>
                     {isAdmin && (
                         <button className="btn btn-danger fw-bold shadow-sm" onClick={() => setShowModal(true)}>
@@ -194,7 +206,7 @@ const Expenses = () => {
                 </div>
 
                 {/* Expenses Table */}
-                <div className="card border-0 shadow-sm rounded-4">
+                <div className="card border-0 shadow-sm rounded-4 expense-list-shell">
                     <div className="card-body p-0">
                         {loading ? <div className="p-4 text-center">Loading...</div> : expenses.length === 0 ? <div className="p-5 text-center text-muted">No expenses recorded yet.</div> : (
                             <>
@@ -222,15 +234,14 @@ const Expenses = () => {
                                                     {/* --- NEW: DOWNLOAD BUTTON --- */}
                                                     {exp.receiptUrl ? (
                                                         <td>
-                                                            <a
-                                                                href={`${BACKEND_URL}${exp.receiptUrl}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openAuthenticatedFile(exp.receiptUrl).catch(() => toast.error("Unable to open receipt."))}
                                                                 className="btn btn-sm btn-light border text-primary"
                                                                 title="View Bill"
                                                             >
                                                                 <FaFileInvoice className="me-1" /> View
-                                                            </a>
+                                                            </button>
                                                         </td>
                                                     ) : (
                                                         // We MUST render an empty TD to keep alignment, 
@@ -240,7 +251,7 @@ const Expenses = () => {
 
                                                     {isAdmin && (
                                                         <td className="text-end pe-4">
-                                                            <button onClick={() => handleDelete(exp.id)} className="btn btn-sm btn-outline-danger border-0 rounded-circle"><FaTrash size={12} /></button>
+                                                            <button aria-label="Cancel expense" title="Cancel expense" onClick={() => handleDelete(exp.id)} className="btn btn-sm btn-outline-danger border-0 rounded-circle"><FaTrash size={12} /></button>
                                                         </td>
                                                     )}
                                                 </tr>
@@ -250,9 +261,9 @@ const Expenses = () => {
                                 </div>
 
                                 {/* Mobile Card Stack View */}
-                                <div className="d-block d-md-none">
+                                <div className="d-block d-md-none expense-mobile-list">
                                     {expenses.map(exp => (
-                                        <div key={exp.id} className="p-3 border-bottom bg-white">
+                                        <div key={exp.id} className="p-3 border-bottom bg-white expense-mobile-card">
                                             <div className="d-flex justify-content-between align-items-start mb-1">
                                                 <div>
                                                     <div className="fw-bold text-dark">{exp.title}</div>
@@ -264,18 +275,17 @@ const Expenses = () => {
                                                 <span className="fw-bold text-danger">- ₹{exp.amount}</span>
                                                 <div className="d-flex gap-2">
                                                     {exp.receiptUrl && (
-                                                        <a
-                                                            href={`${BACKEND_URL}${exp.receiptUrl}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openAuthenticatedFile(exp.receiptUrl).catch(() => toast.error("Unable to open receipt."))}
                                                             className="btn btn-sm btn-light border text-primary"
                                                             title="View Bill"
                                                         >
                                                             <FaFileInvoice className="me-1" size={12} /> View
-                                                        </a>
+                                                        </button>
                                                     )}
                                                     {isAdmin && (
-                                                        <button onClick={() => handleDelete(exp.id)} className="btn btn-sm btn-outline-danger border-0 rounded-circle"><FaTrash size={12} /></button>
+                                                        <button aria-label="Cancel expense" title="Cancel expense" onClick={() => handleDelete(exp.id)} className="btn btn-sm btn-outline-danger border-0 rounded-circle"><FaTrash size={12} /></button>
                                                     )}
                                                 </div>
                                             </div>
@@ -287,10 +297,11 @@ const Expenses = () => {
                     </div>
                 </div>
 
+                {isAdmin && <ExpenseWorkflow refreshVersion={workflowVersion} onChanged={fetchExpenses} />}
                 {/* ADD EXPENSE MODAL */}
                 {showModal && (
                     <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-                        <div className="bg-white rounded-4 shadow-lg p-4" style={{ width: '450px' }}>
+                        <div className="bg-white rounded-4 shadow-lg p-4" style={{ width: 'min(450px, calc(100vw - 24px))', maxHeight: '90dvh', overflowY: 'auto' }}>
                             <div className="d-flex justify-content-between align-items-center mb-3">
                                 <h5 className="fw-bold mb-0">Add New Expense</h5>
                                 <button onClick={() => setShowModal(false)} className="btn btn-sm btn-light rounded-circle"><FaTimes /></button>
@@ -303,7 +314,7 @@ const Expenses = () => {
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label small fw-bold text-muted">AMOUNT (₹)</label>
-                                    <input type="number" className="form-control" required
+                                    <input type="number" min=".01" step=".01" className="form-control" required
                                         value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} />
                                 </div>
                                 <div className="row mb-3">
@@ -328,12 +339,13 @@ const Expenses = () => {
                                 <div className="mb-4">
                                     <label className="form-label small fw-bold text-muted">UPLOAD BILL / RECEIPT</label>
                                     <div className="input-group">
-                                        <input type="file" className="form-control" accept="image/*,.pdf" onChange={handleFileChange} />
+                                        <input type="file" className="form-control" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={handleFileChange} />
                                         <span className="input-group-text bg-light text-secondary"><FaUpload /></span>
                                     </div>
                                     {formData.receiptFile && (
                                         <small className="text-success d-block mt-1">Selected: {formData.receiptFile.name}</small>
                                     )}
+                                    <small className="text-muted d-block mt-1">JPEG, PNG, WebP, or PDF · up to 5 MB</small>
                                 </div>
 
                                 <button type="submit" className="btn btn-danger w-100 fw-bold py-2" disabled={submitting}>
@@ -344,8 +356,10 @@ const Expenses = () => {
                     </div>
                 )}
 
-        </>
+        </div>
     );
 };
 
 export default Expenses;
+
+

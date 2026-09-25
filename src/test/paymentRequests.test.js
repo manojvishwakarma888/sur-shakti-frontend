@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 // Exercise the actual page request functions against the backend DTO contract.
-const source = readFileSync(new URL('../pages/MyBills.jsx', import.meta.url), 'utf8');
+const source = ['MyBills', 'PaymentReview'].map(page => readFileSync(new URL('../pages/' + page + '.jsx', import.meta.url), 'utf8')).join('\n');
 function requestFunction(name, response = { transactionId: 42 }) {
   const start = source.indexOf('  const ' + name + ' =');
   assert.ok(start >= 0);
@@ -39,4 +39,20 @@ test('manual verification includes the cash reference in supported Notes', async
   await fn({ paymentTransactionId: 42, transactionId: 'CASH-17' });
   assert.equal(calls[0].url, '/payment-transactions/admin/42/manual-verify');
   assert.equal(calls[0].payload.notes, 'Cash payment verified by admin. Reference: CASH-17');
+});
+test('staff verification sends approval and failure reason fields', async () => {
+  const { fn, calls } = requestFunction('verifyPaymentTransaction');
+  await fn({ paymentTransactionId: 42, isVerified: false, failureReason: 'Reference did not match.' });
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [{
+    url: '/payment-transactions/42/verify',
+    payload: { isVerified: false, failureReason: 'Reference did not match.' },
+  }]);
+});
+test('staff retry sends the optional reason field', async () => {
+  const { fn, calls } = requestFunction('retryPaymentVerification');
+  await fn({ paymentTransactionId: 42, reason: 'Gateway is available again.' });
+  assert.deepEqual(JSON.parse(JSON.stringify(calls)), [{
+    url: '/payment-transactions/admin/42/retry-verification',
+    payload: { reason: 'Gateway is available again.' },
+  }]);
 });

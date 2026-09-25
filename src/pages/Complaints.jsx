@@ -4,11 +4,16 @@ import Sidebar from '../components/Sidebar';
 import { AuthContext } from '../context/AuthContext';
 import { FaPlus, FaCheckCircle, FaExclamationCircle, FaClock, FaUser } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import CommunityPageHero from '../components/CommunityPageHero';
 
 const Complaints = () => {
   const { user } = useContext(AuthContext); 
   const [complaints, setComplaints] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [ticketFilter, setTicketFilter] = useState('All');
+  const resolved = item => ['resolved', 'closed'].includes(String(item.status || item.Status).toLowerCase());
+  const resolvedCount = complaints.filter(resolved).length;
+  const visibleComplaints = complaints.filter(item => ticketFilter === 'All' || (ticketFilter === 'Resolved' ? resolved(item) : !resolved(item)));
   
   // Form State
   const [title, setTitle] = useState("");
@@ -79,23 +84,25 @@ const Complaints = () => {
   };
 
   return (
-    <>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2><FaExclamationCircle className="me-2 text-danger" /> Helpdesk Tickets</h2>
+    <div className="helpdesk-screen">
+        <CommunityPageHero pathname="/complaints" title="Helpdesk Tickets">
           
           {/* Only show 'Raise Ticket' if NOT admin (usually), or both can raise */}
           <button className="btn btn-danger" onClick={() => setShowModal(true)}>
             <FaPlus className="me-2" /> Raise Ticket
           </button>
-        </div>
+        </CommunityPageHero>
 
+        <div className="ticket-filter-bar" role="group" aria-label="Filter helpdesk tickets">
+          {['All', 'Pending', 'Resolved'].map(filter => <button key={filter} type="button" aria-pressed={ticketFilter === filter} onClick={() => setTicketFilter(filter)}>{filter}<span>{filter === 'All' ? complaints.length : filter === 'Resolved' ? resolvedCount : complaints.length - resolvedCount}</span></button>)}
+        </div>
         <div className="row g-4">
-          {complaints.map((item) => (
+          {visibleComplaints.map((item) => (
             // FIX 1: Use 'TicketId' as the key
             <div key={item.ticketId || item.TicketId} className="col-md-12">
-              <div className={`card shadow-sm border-0 ${item.status === 'Resolved' ? 'opacity-75' : ''}`}>
+              <div className={`card ticket-card shadow-sm border-0 ${item.status === 'Resolved' ? 'opacity-75' : ''}`}>
                 <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start">
+                  <div className="d-flex justify-content-between align-items-start ticket-layout">
                     
                     {/* Left Side: Ticket Details */}
                     <div>
@@ -114,7 +121,7 @@ const Complaints = () => {
                         {/* Admin View: Show who raised it */}
                         {(item.raisedBy || item.RaisedBy) && (
                           <span className="text-primary fw-bold">
-                            <FaUser className="me-1"/> {item.raisedBy} (Flat {item.flatNo})
+                            <FaUser className="me-1"/> {item.raisedBy} (Row house {item.flatNo})
                           </span>
                         )}
                       </div>
@@ -183,9 +190,11 @@ const Complaints = () => {
             </div>
           ))}
 
-          {complaints.length === 0 && (
-            <div className="text-center mt-5 text-muted">
-              <p>No tickets found.</p>
+          {visibleComplaints.length === 0 && (
+            <div className="empty-state mt-3">
+              <FaCheckCircle size={28} className="text-success" />
+              <h3 className="h5 mt-3">{ticketFilter === 'All' ? 'No helpdesk tickets' : `No ${ticketFilter.toLowerCase()} tickets`}</h3>
+              <p>{ticketFilter === 'All' ? 'Your reported issues and their progress will appear here.' : 'Choose All to see your other tickets.'}</p>
             </div>
           )}
         </div>
@@ -231,7 +240,7 @@ const Complaints = () => {
           </div>
         )}
 
-    </>
+    </div>
   );
 };
 

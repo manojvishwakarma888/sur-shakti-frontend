@@ -1,0 +1,154 @@
+/* Scoped to content pages; event screens and shell navigation keep their own design. */
+.refined-page{min-height:calc(100dvh - 90px)}
+.refined-page .bills-screen>div:first-child{min-height:92px;margin-bottom:20px!important;align-content:center}
+.refined-page .bill-summary{min-height:105px}
+.refined-page .bill-results{min-height:260px}
+.refined-page .btn-group .btn{transition:background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease}
+.refined-page nav[aria-label="Billing pages"] .btn{transition:background-color .18s ease,color .18s ease,box-shadow .18s ease}
+@media(prefers-reduced-motion:reduce){.refined-page .bill-results-transition{animation:none}.refined-page .btn-group .btn,.refined-page nav[aria-label="Billing pages"] .btn{transition:none}}
+.refined-page .resident-welcome{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:20px 22px;border:1px solid var(--border-color);border-radius:20px;background:var(--card-bg);box-shadow:0 5px 22px rgb(25 60 48 / 4%)}
+.resident-welcome-copy{min-width:0;border-left:4px solid #379571;padding-left:16px}
+.resident-welcome-copy h2{font-size:clamp(1.25rem,2vw,1.7rem)!important;line-height:1.3;letter-spacing:-.035em}
+.resident-welcome-clock{display:none}
+@media(min-width:768px){
+  .refined-page .resident-welcome{grid-template-columns:minmax(0,1fr) auto;align-items:center;padding:24px}
+  .resident-welcome-clock{display:block;padding-left:22px;border-left:1px solid var(--border-color)}
+  .resident-welcome-clock h2{font-size:1.45rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .resident-welcome-clock small{font-size:.65rem!important;letter-spacing:.06em!important}
+  .refined-page .resident-dashboard .resident-widget-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-inline:0}
+  .refined-page .resident-dashboard .resident-widget-row>*{width:auto;padding:0;margin:0;min-width:0}
+  .refined-page .resident-dashboard .resident-widget-row .card{min-height:260px;padding:24px!important;border-radius:24px!important}
+  .refined-page .resident-dashboard .balance-card{background:linear-gradient(140deg,#e6f4ec,#f7fcf9)!important;border-color:#badbcb!important}
+  .refined-page .resident-dashboard .quick-actions-card{background:linear-gradient(135deg,#163f37,#286c57)!important}
+  .refined-page .resident-dashboard .quick-actions-card h5,.refined-page .resident-dashboard .quick-actions-card p{color:#fff!important}
+  .refined-page .resident-dashboard .helpdesk-summary-card{background:linear-gradient(140deg,#fff5e3,#fffdf7)!important;border-color:#ecdbb7!important}
+  body.dark-mode .refined-page .resident-dashboard .balance-card{background:linear-gradient(140deg,#16362b,#1a3028)!important}
+  body.dark-mode .refined-page .resident-dashboard .helpdesk-summary-card{background:linear-gradient(140deg,#352e22,#282b27)!important}
+}
+@media(min-width:768px) and (max-width:1100px){
+  .refined-page .resident-dashboard .resident-widget-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .refined-page .resident-dashboard .resident-widget-row>:last-child{grid-column:1/-1}
+  .refined-page .resident-welcome{gap:12px;padding:18px}
+  .resident-welcome-clock{padding-left:12px}
+  .resident-welcome-clock h2{font-size:1.1rem}
+}
+.refined-page{--surface-edge:color-mix(in srgb,var(--border-color) 80%,transparent);--surface-shadow:0 6px 24px rgb(28 43 65 / 5%)}
+.refined-page .card{border-radius:20px!important;box-shadow:var(--surface-shadow)!important;border:1px solid var(--surface-edge)!important}
+.refined-page .card-header{border-bottom-color:var(--surface-edge)}
+.refined-page :is(.page-heading,.screen-intro){gap:12px;margin-bottom:20px}
+.refined-page .screen-intro.row{gap:0}
+.refined-page :is(.page-heading,.screen-intro) h2{letter-spacing:-.035em;line-height:1.2}
+.refined-page .btn{min-height:44px;gap:6px;border-radius:12px;font-weight:650;transition:background-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.refined-page .btn:active:not(:disabled){transform:scale(.98)}
+.refined-page .btn:disabled{cursor:wait}
+.refined-page :is(a,button,input,select,textarea,summary):focus-visible{outline:3px solid #8c76cc;outline-offset:3px}
+.refined-page :is(.form-control,.form-select){min-height:46px;border-radius:12px;border-color:var(--input-border);background-color:var(--input-bg);color:var(--input-text);font-size:1rem;transition:border-color .16s ease,box-shadow .16s ease}
+.refined-page :is(.form-control,.form-select):focus{border-color:#8c76cc;box-shadow:0 0 0 3px rgb(140 118 204 / 13%)}
+.refined-page .form-label{font-weight:650;font-size:.83rem;margin-bottom:7px}
+.refined-page .table{--bs-table-bg:transparent}
+.refined-page .table th{font-size:.73rem;letter-spacing:.025em;vertical-align:middle}
+.refined-page .table td{vertical-align:middle;padding-top:14px;padding-bottom:14px}
+.refined-page .table tbody tr{transition:background-color .16s ease}
+.refined-page .table tbody tr:hover{background:color-mix(in srgb,var(--sidebar-active-bg) 55%,transparent)}
+.refined-page nav[aria-label="Billing pages"]{display:flex;flex-wrap:wrap!important;gap:4px!important;width:fit-content;max-width:100%;padding:5px;background:var(--bg-secondary);border:1px solid var(--surface-edge);border-radius:16px;box-shadow:0 3px 12px rgb(28 43 65 / 4%)}
+.refined-page nav[aria-label="Billing pages"] .btn{flex:1 1 auto;border:0;border-radius:11px!important;font-size:.78rem;white-space:normal;padding:8px 12px!important}
+.refined-page nav[aria-label="Billing pages"] .btn-outline-secondary{color:var(--text-secondary);background:transparent}
+.refined-page nav[aria-label="Billing pages"] .btn-primary{box-shadow:0 3px 8px rgb(28 43 65 / 15%)}
+.refined-page .bill-summary{gap:12px}
+.refined-page .bill-summary>div{border-radius:17px;padding:16px;border:1px solid var(--surface-edge);background:var(--card-bg);box-shadow:var(--surface-shadow)}
+.refined-page .maintenance-summary>div{border:1px solid var(--surface-edge);background:var(--card-bg);border-radius:16px}
+.refined-page .maintenance-tabs{gap:7px;margin-bottom:16px}
+.refined-page .maintenance-field{gap:7px}
+.refined-page .audit-activity{border-radius:16px}
+.refined-page .audit-activity summary{min-height:44px;padding:8px 0}
+@media(max-width:767.98px){
+  .refined-page :is(.page-heading,.screen-intro){align-items:flex-start;flex-wrap:wrap}
+  .refined-page :is(.page-heading,.screen-intro) h2{font-size:1.4rem}
+  .refined-page nav[aria-label="Billing pages"]{width:100%}
+  .refined-page nav[aria-label="Billing pages"] .btn{padding-inline:9px!important}
+  .refined-page .maintenance-form-grid{gap:14px}
+  .refined-page .card-body{overflow-wrap:anywhere}
+}
+@media(min-width:768px){
+  .refined-page{width:100%;max-width:1440px;margin-inline:auto}
+  .refined-page :is(.page-heading,.screen-intro){margin-bottom:24px;gap:20px}
+  .refined-page :is(.page-heading,.screen-intro) h2{font-size:1.65rem}
+  .refined-page .maintenance-form-grid{gap:18px}
+  .refined-page .maintenance-summary{gap:16px}
+  .refined-page .maintenance-summary>div{padding:20px}
+  .refined-page nav[aria-label="Billing pages"] .btn{min-width:120px;padding-inline:18px!important}
+  .refined-page .table :is(th,td){padding-inline:16px}
+}
+@media(min-width:768px) and (max-width:1199.98px){
+  .refined-page .community-hero-copy{max-width:68%;padding:28px}
+  .refined-page .community-hero-copy h1{font-size:1.9rem}
+  .refined-page .community-hero-art{width:32%;min-width:0;opacity:.65}
+  .refined-page .maintenance-form-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+  .refined-page .page-heading{flex-wrap:wrap}
+  .refined-page .emergency-card .card-body{flex-direction:column;gap:10px;text-align:center;padding:16px 8px!important}
+  .refined-page .emergency-card .card-body>.rounded-circle{margin-right:0!important;flex-shrink:0}
+  .refined-page .service-grid>.col-md-4{width:50%}
+  .refined-page .contact-card .card-body{padding:16px!important;gap:10px}
+  .refined-page .contact-card .card-body>.rounded-circle{margin-right:0!important;flex-shrink:0}
+}
+@media(min-width:1200px){
+  .refined-page{padding:32px!important}
+  .refined-page .community-page-hero{margin-bottom:30px}
+  .refined-page .card-body{padding:24px}
+  .refined-page .maintenance-form-grid{gap:20px}
+}
+@media(hover:hover){.refined-page .btn:hover:not(:disabled){box-shadow:0 4px 12px rgb(28 43 65 / 12%)}}
+@media(prefers-reduced-motion:reduce){.refined-page .btn,.refined-page .form-control,.refined-page .form-select,.refined-page .table tbody tr{transition:none}.refined-page .btn:active:not(:disabled){transform:none}}
+
+/* Daily tasks: quiet surfaces, obvious actions, detail on demand. */
+.refined-page .bill-summary{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);align-items:stretch;margin-bottom:20px}
+.refined-page .bill-summary>div{display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0;padding:22px;border-radius:22px}
+.refined-page .bill-summary>div:first-child{background:linear-gradient(120deg,#183e34,#286d55);border-color:#286d55;box-shadow:0 10px 24px rgb(27 79 57 / 12%)}
+.refined-page .bill-summary>div:first-child :is(span,strong){color:#fff!important}
+.refined-page .bill-summary>div>span{font-size:.78rem;font-weight:600;line-height:1.4}
+.refined-page .bill-summary>div>strong{font-size:clamp(1.45rem,3vw,2.2rem);line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.refined-page .bill-filter-panel{border:1px solid var(--border-color);box-shadow:none!important}
+.refined-page .bill-filter-panel .btn-group{padding:4px;gap:4px;border-radius:14px;background:var(--bg-primary);box-shadow:none!important}
+.refined-page .bill-filter-panel .btn-group .btn{margin:0;border:0;border-radius:10px!important}
+.refined-page .bill-filter-panel .btn-group .btn[aria-pressed="true"]{background:#1e5743;color:#fff;box-shadow:0 2px 6px rgb(20 60 45 / 14%)}
+.refined-page .bill-filter-panel .btn-group .btn[aria-pressed="false"]{color:var(--text-secondary);background:transparent}
+.refined-page .ticket-filter-bar{display:flex;gap:6px;max-width:100%;width:fit-content;margin:0 0 22px;padding:5px;border:1px solid var(--border-color);border-radius:16px;background:var(--card-bg)}
+.refined-page .ticket-filter-bar button{gap:8px;min-height:44px;border:0;border-radius:11px;padding:8px 14px;background:transparent;color:var(--text-secondary);font-size:.82rem;font-weight:700;transition:background-color .15s ease,color .15s ease}
+.refined-page .ticket-filter-bar button span{display:grid;place-items:center;min-width:22px;min-height:22px;padding:2px 5px;border-radius:7px;background:var(--bg-primary);color:var(--text-primary);font-size:.7rem;font-variant-numeric:tabular-nums}
+.refined-page .ticket-filter-bar button[aria-pressed="true"]{background:#1e5743;color:#fff}
+.refined-page .ticket-filter-bar button[aria-pressed="true"] span{background:#fff;color:#1e5743}
+.refined-page .ticket-card{position:relative;border-left:4px solid #8bbaa3!important}
+.refined-page .ticket-layout>div:first-child{min-width:0;flex:1}
+.refined-page .ticket-layout>div:last-child{flex-shrink:0}
+.refined-page .ticket-layout>div:first-child>div.small{flex-wrap:wrap;row-gap:5px!important}
+.refined-page .notice-card{border-top:3px solid #b5d2c1!important}
+.refined-page .notice-card:has(.badge.bg-danger){border-top-color:#dc3545!important}
+.refined-page .notice-card .card-title{font-size:1.08rem;line-height:1.4;letter-spacing:-.015em}
+.refined-page .notice-card .card-subtitle{display:flex;flex-wrap:wrap;align-items:center;gap:5px;line-height:1.6}
+.refined-page .readable-copy .card-text{line-height:1.75;font-size:.9rem;overflow-wrap:anywhere;margin-bottom:8px}
+.refined-page .readable-copy-toggle{padding:0!important;text-decoration:none;font-size:.8rem;color:var(--sidebar-active-text)}
+.refined-page .notice-card .card-footer{padding:12px 20px;border-top:1px solid var(--border-color)!important}
+.refined-page .contact-card{transition:border-color .15s ease,box-shadow .15s ease}
+.refined-page .contact-card:focus-visible{outline:3px solid #8c76cc;outline-offset:3px}
+.refined-page .empty-state{background:var(--card-bg);border:1px dashed var(--border-color);border-radius:22px;padding:32px 20px;text-align:center}
+.refined-page .empty-state p{max-width:360px;margin:8px auto 0;color:var(--text-secondary)}
+body.dark-mode .refined-page .ticket-filter-bar button[aria-pressed="true"]{background:#285d48;color:#fff}
+@media(max-width:767.98px){
+  .refined-page .bill-summary{gap:10px;min-height:116px}
+  .refined-page .bill-summary>div{padding:18px 14px;border-radius:18px}
+  .refined-page .bill-summary>div>span{font-size:.72rem}
+  .refined-page .bill-filter-panel .row{--bs-gutter-y:12px}
+  .refined-page .bill-filter-panel .row>div:empty{display:none}
+  .refined-page .bill-results{background:transparent!important;border:0!important;box-shadow:none!important}
+  .refined-page .ticket-filter-bar{width:100%;gap:3px}
+  .refined-page .ticket-filter-bar button{flex:1;padding:8px 6px;gap:5px;font-size:.75rem}
+  .refined-page .notice-card .card-body{padding:20px}
+  .refined-page .community-page-hero{margin-bottom:18px}
+}
+@media(min-width:768px){
+  .refined-page .helpdesk-screen>.row{--bs-gutter-y:18px}
+  .refined-page .ticket-card .card-body{padding:24px}
+  .refined-page .ticket-layout{gap:24px}
+}
+@media(hover:hover){.refined-page .contact-card:hover{border-color:#8bbaa3!important;box-shadow:0 8px 24px rgb(26 73 52 / 10%)!important}}
+@media(prefers-reduced-motion:reduce){.refined-page .ticket-filter-bar button,.refined-page .contact-card{transition:none}}

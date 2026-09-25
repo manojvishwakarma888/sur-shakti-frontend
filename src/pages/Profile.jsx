@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
-import api from '../services/api';
+import api, { getApiErrorMessage, publicAssetUrl } from '../services/api';
 import Sidebar from '../components/Sidebar';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { FaUserCircle, FaLock, FaPhone, FaSave, FaCamera } from 'react-icons/fa';
 import { markPasswordUpdatedNow } from '../utils/passwordPolicy';
+import CommunityPageHero from '../components/CommunityPageHero';
 
 const Profile = () => {
   const { user } = useContext(AuthContext);
@@ -45,6 +46,15 @@ const Profile = () => {
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      e.target.value = '';
+      return toast.error('Choose a JPEG, PNG, or WebP image.');
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      e.target.value = '';
+      return toast.error('Profile photo must be 5 MB or smaller.');
+    }
 
     const formData = new FormData();
     formData.append('file', file);
@@ -60,7 +70,7 @@ const Profile = () => {
       toast.success("Profile photo updated!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to upload photo.");
+      toast.error(getApiErrorMessage(err, 'Failed to upload photo.'));
     }
   };
 
@@ -94,8 +104,8 @@ const Profile = () => {
   if (loading) return <div className="d-flex justify-content-center mt-5">Loading...</div>;
 
   return (
-    <>
-        <h2 className="fw-bold text-dark mb-4">Account Settings</h2>
+    <div className="profile-screen">
+        <CommunityPageHero pathname="/profile" title="Account Settings" />
 
         <div className="row g-4">
           {/* --- LEFT COLUMN: PROFILE --- */}
@@ -114,7 +124,7 @@ const Profile = () => {
                     {/* Image or Placeholder */}
                     {profile.profilePictureUrl ? (
                         <img 
-                          src={profile.profilePictureUrl} 
+                          src={publicAssetUrl(profile.profilePictureUrl)}
                           alt="Profile" 
                           className="rounded-circle border border-3 border-light shadow-sm"
                           style={{ width: '120px', height: '120px', objectFit: 'cover' }} 
@@ -132,7 +142,7 @@ const Profile = () => {
                         style={{ cursor: 'pointer', transform: 'translate(10%, 10%)' }}
                     >
                       <FaCamera size={16} />
-                      <input type="file" accept="image/*" className="d-none" onChange={handlePhotoUpload} />
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="d-none" onChange={handlePhotoUpload} />
                     </label>
                   </div>
                 </div>
@@ -178,7 +188,7 @@ const Profile = () => {
             </div>
           </div>
         </div>
-    </>
+    </div>
   );
 };
 

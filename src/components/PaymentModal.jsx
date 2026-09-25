@@ -1,125 +1,133 @@
-import React, { useState } from 'react';
-import QRCode from "react-qr-code";
+import BillCreditSummary from './BillCreditSummary';
+import { billPayableAmount } from '../utils/billing';
+import { validateProof } from '../services/maintenance';
+import { useEffect, useRef, useState } from 'react';
+import QRCode from 'react-qr-code';
 import { FaTimes, FaCopy } from 'react-icons/fa';
+import { createSocietyUpiUri, SOCIETY_NAME, SOCIETY_UPI_ID } from '../utils/upi';
 
-const PaymentModal = ({ bill, onClose, onPaymentComplete }) => {
-  const [step, setStep] = useState(1); // 1: Scan, 2: Confirm
+export default function PaymentModal({ bill, onClose, onPaymentComplete }) {
+  const dialog = useRef(null);
+  const busy = useRef(false);
+  const [proof, setProof] = useState(null);
+  const [step, setStep] = useState(1);
   const [transactionId, setTransactionId] = useState('');
-  const [validationError, setValidationError] = useState('');
+  const [error, setError] = useState('');
+  const [copyStatus, setCopyStatus] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const amount = billPayableAmount(bill);
+  const month = bill.month || bill.Month || '';
+  const type = bill.billType || bill.BillType || 'Maintenance';
+  const upiString = createSocietyUpiUri(amount, `${type} ${month}`);
 
-  // --- CONFIGURATION ---
-  // REPLACE THIS with your actual UPI ID (e.g., yourname@oksbi)
-  const SOCIETY_UPI_ID = "7276450016@ybl"; 
-  const SOCIETY_NAME = "Sur Shakti Residency";
-  // ---------------------
+  useEffect(() => {
+    const element = dialog.current;
+    const previousFocus = document.activeElement;
+    const overflow = document.body.style.overflow;
+    element.showModal();
+    document.body.style.overflow = 'hidden';
+    return () => {
+      element.close();
+      document.body.style.overflow = overflow;
+      previousFocus?.focus();
+    };
+  }, []);
 
-  // Generate UPI String
-  // Format: upi://pay?pa=ADDRESS&pn=NAME&am=AMOUNT&tn=NOTE
-  const upiString = `upi://pay?pa=${SOCIETY_UPI_ID}&pn=${SOCIETY_NAME}&am=${bill.amount || bill.Amount}&tn=Bill ${bill.month}`;
+  const copyUpi = async () => {
+    try {
+      await navigator.clipboard.writeText(SOCIETY_UPI_ID);
+      setCopyStatus('UPI ID copied.');
+    } catch {
+      setCopyStatus('Unable to copy. Select and copy the UPI ID above.');
+    }
+  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const normalizedTxn = transactionId.trim().toUpperCase().replace(/\s+/g, '');
-    const isValidTxn = /^[A-Z0-9]{8,30}$/.test(normalizedTxn);
-    if (!isValidTxn) {
-      setValidationError('Please enter a valid UTR (8-30 letters/numbers).');
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (busy.current) return;
+    const reference = transactionId.trim().toUpperCase().replace(/\s+/g, '');
+    if (!reference || reference.length > 100) {
+      setError('Enter the payment reference from your payment app (up to 100 characters).');
       return;
     }
-    setValidationError('');
-    setTransactionId(normalizedTxn);
-    
-    // Go to animated checkmark step
-    setStep(3);
-
-    // Call parent function to update Backend after showing visual success checkmark
-    setTimeout(() => {
-      onPaymentComplete({
-        billId: bill.billId || bill.BillId,
-        transactionId: normalizedTxn,
-        amount: bill.amount || bill.Amount,
-        month: bill.month || bill.Month,
+    busy.current = true;
+    setSubmitting(true);
+    setError('');
+    try {
+      await onPaymentComplete({
+        billId: bill.billId || bill.BillId, transactionId: reference, amount, month, proof,
       });
-    }, 2200);
+    } catch (failure) {
+      setError(failure.message || 'Unable to submit. Please try again.');
+    } finally {
+      busy.current = false;
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
-         style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
-      
-      <div className="bg-white rounded-4 shadow-lg overflow-hidden" style={{ width: '400px', maxWidth: '90%' }}>
-        
-        {/* Header */}
-        <div className="bg-primary p-3 d-flex justify-content-between align-items-center text-white">
-          <h5 className="mb-0 fw-bold">Pay Maintenance</h5>
-          {step !== 3 && (
-            <button onClick={onClose} className="btn btn-sm text-white opacity-75"><FaTimes size={20}/></button>
-          )}
+    <dialog ref={dialog} className="payment-dialog" aria-labelledby="payment-title"
+      onCancel={event => { event.preventDefault(); if (!busy.current) onClose(); }}>
+      <div className="payment-heading">
+        <div>
+          <p className="text-muted small mb-1">Sur Shakti Residency</p>
+          <h2 id="payment-title" className="h5 fw-bold mb-0">Pay your bill</h2>
         </div>
-
-        {/* Body */}
-        <div className="p-4 text-center">
-          
-          {step === 3 ? (
-            <div className="py-4 d-flex flex-column align-items-center justify-content-center">
-              <svg className="mb-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" style={{ width: '80px', height: '80px' }}>
-                 <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
-                 <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-              </svg>
-              <h4 className="fw-bold text-success mb-2">Payment Submitted!</h4>
-              <p className="text-muted small px-3">Your transaction ID <strong className="text-dark">{transactionId}</strong> has been logged for review.</p>
-            </div>
-          ) : step === 1 ? (
-            <>
-              <p className="text-muted mb-3">Scan with <strong>PhonePe, GPay, or Paytm</strong></p>
-              
-              <div className="border p-3 rounded-3 d-inline-block mb-3 bg-white">
-                 <QRCode value={upiString} size={180} />
-              </div>
-
-              <h3 className="fw-bold">₹{bill.amount || bill.Amount}</h3>
-              <p className="small text-muted mb-4">{bill.month} Maintenance</p>
-
-              <div className="bg-light p-2 rounded-3 mb-3 d-flex justify-content-between align-items-center">
-                 <small className="text-muted text-truncate" style={{maxWidth: '200px'}}>{SOCIETY_UPI_ID}</small>
-                 <button className="btn btn-link btn-sm p-0" onClick={() => navigator.clipboard.writeText(SOCIETY_UPI_ID)}>
-                    <FaCopy />
-                 </button>
-              </div>
-
-              <button className="btn btn-success w-100 fw-bold py-2" onClick={() => setStep(2)}>
-                I Have Paid
-              </button>
-            </>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div className="mb-3 text-start">
-                <label className="form-label small fw-bold text-muted">ENTER TRANSACTION ID (UTR)</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="e.g. 302518291029" 
-                  value={transactionId}
-                  onChange={(e) => {
-                    setTransactionId(e.target.value);
-                    if (validationError) setValidationError('');
-                  }}
-                  required 
-                />
-                <div className="form-text small">Found in your payment app history. Example: 302518291029</div>
-                {validationError && <div className="text-danger small mt-1">{validationError}</div>}
-              </div>
-              
-              <div className="d-flex gap-2">
-                 <button type="button" className="btn btn-light flex-grow-1" onClick={() => setStep(1)}>Back</button>
-                 <button type="submit" className="btn btn-primary flex-grow-1 fw-bold">Verify & Submit</button>
-              </div>
-            </form>
-          )}
-
-        </div>
+        <button type="button" className="btn btn-light icon-button" aria-label="Close payment"
+          disabled={submitting} onClick={onClose}><FaTimes /></button>
       </div>
-    </div>
+      <div className="payment-body">
+        <div className="payment-amount">
+          <span className="text-muted small">{type}{month ? ' · ' + month : ''}</span>
+          <strong>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(amount))}</strong>
+          <BillCreditSummary bill={bill} />
+        </div>
+        <ol className="payment-steps" aria-label="Payment steps">
+          <li aria-current={step === 1 ? 'step' : undefined}>1. Make payment</li>
+          <li aria-current={step === 2 ? 'step' : undefined}>2. Submit reference</li>
+        </ol>
+        {step === 1 ? (
+          <>
+            <a className="btn btn-primary w-100 payment-open-app" href={upiString}>Open UPI app</a>
+            <p className="small text-muted text-center mt-2">Or scan this QR code with another device.</p>
+            <div className="payment-qr"><QRCode value={upiString} size={164} /></div>
+            <div className="payment-upi">
+              <span>{SOCIETY_UPI_ID}</span>
+              <button type="button" className="btn btn-light icon-button" aria-label="Copy UPI ID" onClick={copyUpi}><FaCopy /></button>
+            </div>
+            <p className="small text-muted mb-3" role="status">{copyStatus}</p>
+            <button type="button" className="btn btn-primary w-100" onClick={() => setStep(2)}>I've paid — add reference</button>
+            <p className="small text-muted text-center mt-3 mb-0">Already paid? Add your reference without paying again.</p>
+          </>
+        ) : (
+          <form onSubmit={handleSubmit} aria-busy={submitting}>
+            <label htmlFor="payment-utr" className="form-label fw-semibold">Payment reference (UTR)</label>
+            <input autoFocus id="payment-utr" className="form-control" value={transactionId}
+              onChange={event => { setTransactionId(event.target.value); setError(''); }}
+              placeholder="e.g. 302518291029" autoComplete="off" autoCapitalize="characters"
+              spellCheck={false} maxLength={100} required disabled={submitting}
+              aria-invalid={Boolean(error)} aria-describedby="payment-help payment-error" />
+            <p id="payment-help" className="small text-muted mt-2">Find this in your payment app's transaction details. The society office will check your payment before marking the bill paid.</p>
+            <label className="form-label" htmlFor="payment-proof">Payment proof (optional)</label>
+            <input id="payment-proof" type="file" className="form-control mb-2" accept="image/jpeg,image/png,image/webp,application/pdf" disabled={submitting}
+              onChange={event => {
+                const file = event.target.files?.[0] || null;
+                const message = validateProof(file);
+                setError(message);
+                if (message) { event.target.value = ''; setProof(null); } else setProof(file);
+              }} />
+            <p className="small text-muted">JPEG, PNG, WebP or PDF, up to 5 MB. Proof uploads before your payment is submitted.</p>
+            <p id="payment-error" className="small text-danger" role="alert">{error}</p>
+            <div className="d-flex gap-2">
+              <button type="button" className="btn btn-outline-secondary" disabled={submitting} onClick={() => setStep(1)}>Back</button>
+              <button type="submit" className="btn btn-primary flex-grow-1" disabled={submitting}>
+                {submitting ? 'Submitting…' : 'Submit for review'}
+              </button>
+            </div>
+            <p className="small text-muted mt-3 mb-0" role="status">{submitting ? 'Sending your reference. Please keep this window open.' : ''}</p>
+          </form>
+        )}
+      </div>
+    </dialog>
   );
-};
-
-export default PaymentModal;
+}

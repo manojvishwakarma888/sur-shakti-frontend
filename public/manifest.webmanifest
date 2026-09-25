@@ -1,0 +1,17 @@
+{
+  "name": "Sur Shakti Connect",
+  "short_name": "Sur Shakti",
+  "description": "Society bills, notices, helpdesk and community services.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/surshakti-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

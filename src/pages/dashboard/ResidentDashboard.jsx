@@ -1,9 +1,12 @@
+import { billPayableAmount } from '../../utils/billing';
+import MobileShortcuts from '../../components/MobileShortcuts';
+import CommunityPageHero from '../../components/CommunityPageHero';
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
 import { 
   FaBullhorn, FaExclamationTriangle, FaRupeeSign, FaWrench, FaPhoneAlt, 
-  FaSun, FaMoon, FaCloudSun, FaCheckCircle, FaTimes, FaCalendarAlt 
+  FaSun, FaMoon, FaCloudSun, FaCheckCircle, FaTimes
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
@@ -11,6 +14,27 @@ const ResidentDashboard = () => {
   const { user } = useContext(AuthContext);
   const [residentStats, setResidentStats] = useState({ myDue: 0 });
   const [notices, setNotices] = useState([]);
+  const [refreshVersion, setRefreshVersion] = useState(0);
+  const [tickets, setTickets] = useState(null);
+  const [ticketError, setTicketError] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    setTickets(null);
+    setTicketError(false);
+    api.get('/Complaint').then(({ data }) => {
+      if (!Array.isArray(data)) throw new Error('Invalid tickets response');
+      if (!cancelled) setTickets(data);
+    }).catch(() => {
+      if (!cancelled) setTicketError(true);
+    });
+    return () => { cancelled = true; };
+  }, [user, refreshVersion]);
+
+  const resolvedTickets = tickets?.filter(ticket =>
+    ['resolved', 'closed'].includes(String(ticket.status ?? ticket.Status ?? '').toLowerCase())
+  ).length ?? 0;
+
   const [loading, setLoading] = useState(true);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -34,7 +58,7 @@ const ResidentDashboard = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [user]);
+  }, [user, refreshVersion]);
 
   const calculateTimeOfDay = () => {
     const hour = new Date().getHours();
@@ -70,20 +94,13 @@ const ResidentDashboard = () => {
       let myDueAmount = 0;
       
       if (billsRes.data && Array.isArray(billsRes.data)) {
-          const currentUserId = String(user?.id || user?.UserId || "").toLowerCase().trim();
-          
+          // The server includes bills accessible through confirmed occupancy, even if billed to a previous resident.
           const myBills = billsRes.data.filter(bill => {
-              const bUserId = String(bill.userId || bill.UserId || "").toLowerCase().trim();
-              if (bUserId === currentUserId && currentUserId !== "") {
-                const isPaid = bill.isPaid ?? bill.IsPaid;
-                const unpaid = isPaid === false || isPaid === 0 || isPaid === "0" || !isPaid;                
-                return unpaid;
-              }
-              return false;
+            const paid = bill.isPaid ?? bill.IsPaid;
+            return paid !== true && paid !== 1 && paid !== '1';
           });
-
           myBills.forEach(bill => {
-              myDueAmount += (bill.amount || bill.Amount || 0);
+              myDueAmount += billPayableAmount(bill);
           });
       }
 
@@ -96,13 +113,13 @@ const ResidentDashboard = () => {
       setNotices(sortedNotices);
       
       // Save offline cache
-      localStorage.setItem('cached_due_amount', myDueAmount.toString());
+      localStorage.setItem('cached_due_amount_' + user.id, myDueAmount.toString());
       localStorage.setItem('cached_dashboard_notices', JSON.stringify(sortedNotices));
       
       setLoading(false);
     } catch (err) { 
         console.error("Dashboard Load Error, loading from offline cache:", err); 
-        const cachedDue = localStorage.getItem('cached_due_amount');
+        const cachedDue = localStorage.getItem('cached_due_amount_' + user.id);
         const cachedNotices = localStorage.getItem('cached_dashboard_notices');
         
         if (cachedDue !== null) {
@@ -132,30 +149,16 @@ const ResidentDashboard = () => {
     <div className="resident-dashboard">
       
       {/* Header Section */}
-      <div className="row mb-4 align-items-center">
-        <div className="col-12 col-md-8 mb-2 mb-md-0">
-          <h2 className="fw-bold text-dark mb-1 fs-3 fs-md-2">{timeData.greeting}, {user?.fullName || 'Resident'}!</h2>
-          <p className="text-muted mb-0 small">House No: <span className="fw-bold text-primary">{user?.flatNo || 'N/A'}</span></p>
-        </div>
-        
-        <div className="col-12 col-md-4 d-flex justify-content-md-end align-items-center gap-2">
-           <div className="text-end d-none d-md-block">
-              <h2 className="fw-bold text-dark mb-0" style={{fontFamily: 'monospace', letterSpacing: '-1px'}}>
-                 {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </h2>
-              <small className="text-muted fw-bold text-uppercase" style={{fontSize: '0.75rem', letterSpacing: '1px'}}>
-                 {TODAY_DATE}
-              </small>
-           </div>
-        </div>
-      </div>
+      <CommunityPageHero pathname="/dashboard" eyebrow={timeData.greeting}
+        title={`Welcome home, ${user?.fullName || 'Resident'}!`}
+        description={<>Row house No: <strong>{user?.flatNo || 'N/A'}</strong> · Sur Shakti Residency</>}>
+        <div className="resident-hero-clock d-none d-md-flex"><span>{TODAY_DATE}</span><time>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time></div>
+      </CommunityPageHero>
 
-      {/* 3-Card Layout: Maintenance, Quick Actions, Status */}
-      <div className="row g-3 mb-3 resident-cards">
-        
-        {/* Maintenance Due Card */}
+      <section role="region" aria-label="Resident widgets"
+        className="row g-3 mb-3 resident-cards resident-widget-row resident-overview">        {/* Maintenance Due Card */}
         <div className="col-12 col-lg-4">
-          <div className="card border-0 shadow-sm rounded-4 h-100 p-3">
+          <div className="card border-0 shadow-sm rounded-4 h-100 p-3 balance-card">
             <div className="card-body d-flex flex-column justify-content-between p-0">
               <div>
                 <div className="d-flex justify-content-between align-items-start mb-2">
@@ -177,7 +180,9 @@ const ResidentDashboard = () => {
                 )}
               </div>
               
-              {residentStats.myDue > 0 ? (
+              {loading ? (
+                  <button className="btn btn-primary w-100 fw-bold py-2 rounded-3" disabled>Loading balance…</button>
+              ) : residentStats.myDue > 0 ? (
                   <Link to="/my-bills" className="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm text-decoration-none">
                       Pay Now
                   </Link>
@@ -192,11 +197,10 @@ const ResidentDashboard = () => {
 
         {/* Quick Actions Card */}
         <div className="col-12 col-lg-4">
-          <div className="card border-0 shadow-sm rounded-4 h-100 p-3 text-white" 
-               style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+          <div className="card border-0 shadow-sm rounded-4 h-100 p-3 text-white quick-actions-card">
             <div className="card-body p-0">
               <h5 className="fw-bold mb-1">Quick Actions</h5>
-              <p className="small opacity-75 mb-4">House No: {user?.flatNo}</p>
+              <p className="small opacity-75 mb-4">Row house No: {user?.flatNo}</p>
               <div className="row g-2">
                 <div className="col-6">
                   <Link to="/complaints" className="btn w-100 h-100 py-3 rounded-3 border-0 text-white d-flex flex-column align-items-center justify-content-center" style={{backgroundColor: 'rgba(255,255,255,0.2)', textDecoration: 'none'}}>
@@ -215,26 +219,36 @@ const ResidentDashboard = () => {
           </div>
         </div>
 
-        {/* Status Greeting Card */}
+        {/* Helpdesk overview */}
         <div className="col-12 col-lg-4">
-           <div className="card border-0 shadow-sm rounded-4 h-100 overflow-hidden text-center position-relative">
-              <div style={{
-                position: 'absolute', top:0, left:0, right:0, bottom:0, 
-                backgroundImage: 'url("https://images.unsplash.com/photo-1596205252654-2c55673400a4?auto=format&fit=crop&w=600&q=80")', 
-                backgroundSize: 'cover', opacity: 0.8
-              }}></div>
-              <div className="card-body position-relative d-flex flex-column align-items-center justify-content-center bg-white m-3 rounded-4 shadow-sm" style={{opacity: 0.95}}>
-                  {timeData.icon}
-                  <h5 className="fw-bold mb-1">{timeData.greeting}</h5>
-                  <small className="text-muted">{timeData.statusMsg}</small>
+          <div className="card border-0 shadow-sm rounded-4 h-100 p-3 helpdesk-summary-card">
+            <div className="card-body p-0 d-flex flex-column">
+              <div className="d-flex justify-content-between align-items-center mb-1">
+                <h5 className="fw-bold mb-0">Helpdesk Overview</h5>
+                <FaWrench className="text-primary" aria-hidden="true" />
               </div>
-           </div>
+              <p className="text-muted small mb-3">Stay on top of your reported issues.</p>
+              {ticketError ? (
+                <p className="text-muted small my-auto" role="status">Ticket summary is unavailable. Open helpdesk to try again.</p>
+              ) : tickets === null ? (
+                <p className="text-muted small my-auto" role="status">Loading tickets...</p>
+              ) : (
+                <div className="helpdesk-summary-counts mb-3">
+                  <div><strong className="text-warning">{tickets.length - resolvedTickets}</strong><span>Pending</span></div>
+                  <div><strong className="text-success">{resolvedTickets}</strong><span>Resolved</span></div>
+                </div>
+              )}
+              <Link to="/complaints" className="btn btn-outline-primary w-100 fw-bold rounded-3 mt-auto">
+                {tickets?.length === 0 ? 'Raise a ticket' : 'View tickets'}
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
-
+      </section>
+      <MobileShortcuts onRefresh={() => setRefreshVersion(value => value + 1)} refreshing={loading || (tickets === null && !ticketError)} />
       {/* Latest Updates Header */}
       <div className="row mb-3 align-items-center">
-          <div className="col-6"><h5 className="fw-bold text-dark m-0">Latest Updates</h5></div>
+          <div className="col-6"><h5 className="fw-bold text-dark m-0"><FaBullhorn className="me-2 mobile-section-icon" aria-hidden="true" />Latest Updates</h5></div>
           <div className="col-6 text-end"><Link to="/notices" className="text-primary fw-bold text-decoration-none small">View All</Link></div>
       </div>
 

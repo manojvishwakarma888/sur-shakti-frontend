@@ -1,11 +1,12 @@
+import BrandLogo from './BrandLogo';
 import React, { useContext, useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 // 1. REMOVE 'axios' import
-import api, { BACKEND_URL } from '../services/api'; // 2. KEEP 'api' (it has the cookie interceptor)
+import api, { publicAssetUrl } from '../services/api'; // 2. KEEP 'api' (it has the cookie interceptor)
 
 import { 
-  FaBuilding, 
+  FaBook, FaBell,
   FaThLarge, 
   FaFileInvoiceDollar, 
   FaMoneyBillWave, 
@@ -14,7 +15,8 @@ import {
   FaPhoneAlt, 
   FaSignOutAlt, 
   FaUserCog,
-  FaTimes 
+  FaTimes,
+  FaCalendarAlt
 } from 'react-icons/fa';
 
 const Sidebar = ({ isOpen, toggle }) => {
@@ -34,14 +36,7 @@ const Sidebar = ({ isOpen, toggle }) => {
 
             const dbValue = response.data.profilePicture; 
 
-            if (dbValue) {                
-                if (dbValue.startsWith("http")) {
-                    setAvatarUrl(dbValue);
-                } else {
-                    // Use the constant variable for cleaner code
-                    setAvatarUrl(`${BACKEND_URL}/Images/${dbValue}`);
-                }
-            }
+            if (dbValue) setAvatarUrl(publicAssetUrl(dbValue));
         } catch (error) {
             // It's normal to fail if not logged in yet, so we just log it
             console.error("Error fetching profile pic:", error);
@@ -66,22 +61,22 @@ const Sidebar = ({ isOpen, toggle }) => {
 
   return (
     <div 
+        id="app-sidebar" aria-label="Community navigation" role={isOpen ? "dialog" : undefined} aria-modal={isOpen ? true : undefined}
         className={`d-flex flex-column bg-white border-end p-3 sidebar-container ${isOpen ? 'open' : ''}`} 
         style={{ width: '280px', minWidth: '280px' }}
     >
       
       {/* Brand & Close Button */}
       <div className="d-flex align-items-center justify-content-between mb-4 px-2 mt-2">
-        <div className="d-flex align-items-center">
-            <div className="bg-primary bg-opacity-10 text-primary p-2 rounded-3 me-3">
-                <FaBuilding size={24} />
-            </div>
+        <div className="d-none d-md-flex align-items-center">
+            <Link to="/dashboard" className="brand-home-link" aria-label="Go to home" onClick={toggle}><BrandLogo size={88} className="me-2" /></Link>
             <div>
                 <h5 className="fw-bold mb-0 text-dark" style={{letterSpacing: '-0.5px'}}>Sur Shakti</h5>
                 <small className="text-muted" style={{fontSize: '0.75rem'}}>Connect</small>
             </div>
         </div>
         
+        <span className="d-md-none h5 fw-bold mb-0">Menu</span>
         <button aria-label="Close navigation" className="btn btn-sm text-secondary d-md-none" onClick={toggle}>
             <FaTimes size={20} />
         </button>
@@ -114,7 +109,7 @@ const Sidebar = ({ isOpen, toggle }) => {
             {user?.fullName || "Resident"}
           </h6>
           <small className="text-primary fw-bold" style={{fontSize: '0.75rem', letterSpacing: '0.5px'}}>
-             {isAdmin ? "ADMINISTRATOR" : (user?.flatNo ? `House NO: ${user.flatNo}` : "RESIDENT")}
+             {isAdmin ? "ADMINISTRATOR" : (user?.flatNo ? `Row house No: ${user.flatNo}` : "RESIDENT")}
           </small>
         </div>
       </div>
@@ -122,11 +117,14 @@ const Sidebar = ({ isOpen, toggle }) => {
       {/* Navigation Links */}
       <ul className="nav nav-pills flex-column flex-grow-1 gap-2">
         <NavItem to="/dashboard" icon={FaThLarge} label="Dashboard" onClick={toggle} />
-        <NavItem to="/my-bills" icon={FaFileInvoiceDollar} label={isAdmin ? "Bills & Payments" : "My Bills"} onClick={toggle} />        
+        <NavItem to="/my-bills" icon={FaFileInvoiceDollar} label={isAdmin ? "Bills" : "My Bills"} onClick={toggle} />        
         <NavItem to="/expenses" icon={FaMoneyBillWave} label="Expenses" onClick={toggle} />
         <NavItem to="/notices" icon={FaBullhorn} label="Notices" onClick={toggle} />
+        <NavItem to="/event-management" icon={FaCalendarAlt} label="Event Management" onClick={toggle} />
         <NavItem to="/complaints" icon={FaHeadset} label="Helpdesk" onClick={toggle} />
         <NavItem to="/directory" icon={FaPhoneAlt} label="Directory" onClick={toggle} />
+        <NavItem to="/maintenance" icon={FaBook} label="Accounts" onClick={toggle} />
+        <NavItem to="/notifications" icon={FaBell} label="Notifications" onClick={toggle} />
         <NavItem to="/profile" icon={FaUserCog} label="Settings" onClick={toggle} />
       </ul>
 
@@ -144,7 +142,7 @@ const Sidebar = ({ isOpen, toggle }) => {
   );
 };
 
-const NavItem = ({ to, icon: Icon, label, onClick }) => (
+const NavItem = ({ to, icon, label, onClick }) => (
   <li className="nav-item">
     <NavLink 
       to={to} 
@@ -159,9 +157,10 @@ const NavItem = ({ to, icon: Icon, label, onClick }) => (
         transition: 'all 0.2s ease'
       })}
     >
-      <Icon size={18} /> {label}
+      {React.createElement(icon, { size: 18 })} {label}
     </NavLink>
   </li>
 );
 
 export default Sidebar;
+

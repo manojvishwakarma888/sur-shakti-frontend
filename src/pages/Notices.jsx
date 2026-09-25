@@ -4,6 +4,8 @@ import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { FaPlus, FaTrash, FaCalendarAlt, FaBullhorn, FaPen, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import ExpandableText from '../components/ExpandableText';
+import CommunityPageHero from '../components/CommunityPageHero';
 
 const Notices = () => {
   const { user } = useContext(AuthContext); 
@@ -108,16 +110,15 @@ const Notices = () => {
   };
 
   return (
-    <>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="fw-bold text-dark"><FaBullhorn className="me-2 text-primary" /> Notice Board</h2>
+    <div className="notices-screen">
+        <CommunityPageHero pathname="/notices" title="Notice Board">
           
           {user?.role === 'Admin' && (
             <button className="btn btn-primary fw-bold shadow-sm" onClick={handleOpenCreate}>
               <FaPlus className="me-2" /> Post New Notice
             </button>
           )}
-        </div>
+        </CommunityPageHero>
 
         <div className="row g-4">
           {loading ? (
@@ -136,7 +137,7 @@ const Notices = () => {
             ))
           ) : notices.map((notice) => (
             <div key={notice.id || notice.noticeId} className="col-md-6 col-lg-4">
-              <div className="card shadow-sm border-0 h-100"
+              <div className="card notice-card shadow-sm border-0 h-100"
               style={{ 
                 backgroundColor: notice.isUrgent ? 'var(--urgent-bg, #fff5f5)' : 'var(--card-bg, #fff)', 
                 borderLeft: notice.isUrgent ? '5px solid #dc3545' : 'none',
@@ -180,9 +181,7 @@ const Notices = () => {
                     <FaCalendarAlt className="me-1" /> Expires: {new Date(notice.expiryDate).toLocaleDateString()}
                   </h6>
                   
-                  <p className="card-text text-secondary" style={{whiteSpace: 'pre-line'}}>
-                    {notice.content}
-                  </p>
+                  <ExpandableText key={notice.content} text={notice.content} />
                 </div>
                 <div className="card-footer bg-transparent border-0 text-end pt-0">
                     <small className="text-muted fst-italic" style={{fontSize: '0.75rem'}}>Posted by Secretary</small>
@@ -192,8 +191,12 @@ const Notices = () => {
           ))}
 
           {notices.length === 0 && !loading && (
-            <div className="col-12 text-center mt-5 text-muted">
-              <p>No active notices found.</p>
+            <div className="col-12">
+              <div className="empty-state">
+                <FaBullhorn size={28} className="text-primary" />
+                <h3 className="h5 mt-3">You’re all caught up</h3>
+                <p>No active notices right now.</p>
+              </div>
             </div>
           )}
         </div>
@@ -271,7 +274,7 @@ const Notices = () => {
           </div>
         )}
 
-    </>
+    </div>
   );
 };
 

@@ -4,8 +4,23 @@ import axiosRetry from 'axios-retry';
 import { toast } from 'react-toastify';
 
 
-export const BACKEND_URL = 'http://localhost:5236';
+export const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5236').replace(/\/$/, '');
 export const API_URL = `${BACKEND_URL}/api`;
+export const publicAssetUrl = (value) => {
+  if (!value || value.startsWith('blob:') || value.startsWith('data:') || /^https?:\/\//i.test(value)) return value;
+  return `${BACKEND_URL}${value.startsWith('/') ? '' : '/'}${value}`;
+};
+
+export const getApiErrorMessage = (error, fallback = 'Something went wrong. Please try again.') => {
+  const data = error?.response?.data;
+  if (typeof data === 'string' && data.trim()) return data;
+  if (data?.detail) return data.detail;
+  if (data?.title) return data.title;
+  if (data?.message) return data.message;
+  const validationMessages = data?.errors && Object.values(data.errors).flat().filter(Boolean);
+  if (validationMessages?.length) return validationMessages.join(' ');
+  return error?.message || fallback;
+};
 
 // Create the Axios instance
 const api = axios.create({
@@ -21,7 +36,7 @@ axiosRetry(api, {
         return retryCount * 1000; 
     },
     retryCondition: (error) => {       
-        return axiosRetry.isNetworkOrIdempotentRequestError(error) || error.code === 'ECONNABORTED';
+        return ['get', 'head', 'options'].includes(error.config?.method?.toLowerCase()) && (axiosRetry.isNetworkOrIdempotentRequestError(error) || error.code === 'ECONNABORTED');
     }
 });
 
@@ -70,3 +85,18 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+export const openAuthenticatedFile = async (apiPath) => {
+  if (!apiPath.startsWith('/') || apiPath.startsWith('//')) throw new Error('Invalid private file path.');
+  const response = await api.get(apiPath.replace(/^\/api\//, '/'), { responseType: 'blob' });
+  const url = URL.createObjectURL(response.data);
+  const opened = window.open(url, '_blank', 'noopener,noreferrer');
+  if (!opened) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'receipt';
+    link.click();
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+};
+

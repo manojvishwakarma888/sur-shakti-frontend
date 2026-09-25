@@ -1,9 +1,10 @@
+import BrandLogo from '../components/BrandLogo';
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FaLock, FaBuilding } from 'react-icons/fa';
+import { FaLock } from 'react-icons/fa';
 import { markPasswordUpdatedNow } from '../utils/passwordPolicy';
 
 const ChangePassword = () => {
@@ -45,9 +46,7 @@ const ChangePassword = () => {
             <div className="card p-4 shadow-lg border-0 rounded-4" style={{ width: '400px', backgroundColor: 'var(--card-bg, #ffffff)' }}>
                 
                 <div className="text-center mb-4">
-                    <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-3 mb-2">
-                        <FaBuilding size={24} />
-                    </div>
+                    <BrandLogo size={128} className="mb-2" />
                     <h4 className="fw-bold text-dark mb-1">Update Password</h4>
                     <p className="text-muted small mb-0">Please refresh your password. This reminder appears every 30 days.</p>
                 </div>

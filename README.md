@@ -1,16 +1,42 @@
-# React + Vite
+# Sur Shakti Connect
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React and Vite frontend for the Sur Shakti society, with a Capacitor Android shell.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```sh
+npm install
+npm run dev
+```
 
-## React Compiler
+The default backend is `http://localhost:5236/api`. Copy `.env.example` to `.env.local` to set `VITE_BACKEND_URL` to a different backend origin (without `/api`). Restart Vite after changing it. A phone needs an address reachable from that device; localhost refers to the phone itself. Backend CORS and Android network configuration must support that origin.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Checks
 
-## Expanding the ESLint configuration
+```sh
+npm run build
+npm test
+npx playwright install chromium
+npm run test:ui
+npm run lint
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Browser tests use mocked API responses and cover narrow layouts, drawer focus, payment pending/error states, account-specific retries, and PDF downloads. They do not verify actual UPI transfers or backend authorization. Existing source lint findings remain; generated Android assets and test output are excluded.
+
+## Mobile UX
+
+- Bottom navigation keeps Home, Bills, Notices and Help within reach.
+- The drawer supports Escape, focus containment and focus restoration.
+- Payment sheets support same-phone UPI links, QR scanning and reference submission with real pending feedback.
+- Bills distinguish load errors from empty results, with a retry action and outstanding summary.
+- Controls accommodate touch, safe areas, keyboard focus and reduced motion.
+- PDF generation libraries load only when downloading a receipt.
+
+## Next improvements
+
+- Add server-sourced payment review statuses so residents can distinguish awaiting verification from unpaid bills.
+- Extend explicit loading, cached-data and retry feedback to notices, the directory and dashboards.
+- Move remaining browser-local offline data to account-specific storage.
+- Confirm the Admin/Secretary permission model with the backend before changing action visibility.
+- Validate the Android build on a physical device, including UPI app handoff, keyboard behavior and receipt downloads.
+- Configure deployment-specific API and society payment details; the UPI payee remains the existing project configuration.

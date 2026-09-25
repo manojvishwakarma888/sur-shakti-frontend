@@ -1,3 +1,4 @@
+import { billPayableAmount } from './billing';
 export function normalizeWhatsAppPhone(value) {
   const raw = String(value ?? '').trim();
   if (!raw || !/^\+?[\d\s().-]+$/.test(raw)) return '';
@@ -16,13 +17,13 @@ export function buildBillReminder(bill) {
   const name = bill.residentName || bill.ResidentName || 'Resident';
   const flat = bill.flatNo || bill.FlatNo;
   const month = bill.month || bill.Month;
-  const amount = Number(bill.amount ?? bill.Amount);
+  const amount = billPayableAmount(bill);
   const due = bill.dueDate || bill.DueDate;
   const date = due ? new Date(due) : null;
   return [
     'Hello ' + name + ',',
     'This is a payment reminder from Sur Shakti Residency.',
-    flat ? 'Flat: ' + flat : '',
+    flat ? 'Row house: ' + flat : '',
     (bill.billType || bill.BillType || 'Maintenance') + (month ? ' - ' + month : ''),
     Number.isFinite(amount) ? 'Amount pending: ' + new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount) : '',
     date && !Number.isNaN(date.getTime()) ? 'Due date: ' + date.toLocaleDateString('en-IN') : '',

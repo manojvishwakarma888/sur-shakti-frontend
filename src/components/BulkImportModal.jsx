@@ -1,14 +1,30 @@
 import React, { useState } from 'react';
-import api from '../services/api';
+import api, { getApiErrorMessage } from '../services/api';
 import { FaFileExcel, FaUpload, FaTimes, FaInfoCircle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 const BulkImportModal = ({ onClose, onRefresh }) => {
     const [file, setFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [result, setResult] = useState(null);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [isResending, setIsResending] = useState(false);
 
     const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
+        const selected = e.target.files[0];
+        setResult(null);
+        if (!selected) return setFile(null);
+        if (!selected.name.toLowerCase().endsWith('.xlsx')) {
+            e.target.value = '';
+            setFile(null);
+            return toast.error('Choose an .xlsx workbook. The older .xls format is not supported.');
+        }
+        if (selected.size > 5 * 1024 * 1024) {
+            e.target.value = '';
+            setFile(null);
+            return toast.error('The workbook must be 5 MB or smaller.');
+        }
+        setFile(selected);
     };
 
     const handleUpload = async () => {
@@ -23,13 +39,27 @@ const BulkImportModal = ({ onClose, onRefresh }) => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
-            toast.success(res.data.message);
+            setResult(res.data);
+            toast.success(res.data.message || 'Resident import completed.');
             onRefresh(); // Refresh the resident list on the dashboard
-            onClose();
         } catch (err) {
-            toast.error(err.response?.data || "Import failed. Please check file format.");
+            toast.error(getApiErrorMessage(err, 'Import failed. Please check the workbook.'));
         } finally {
             setIsUploading(false);
+        }
+    };
+
+    const handleResendInvitation = async (e) => {
+        e.preventDefault();
+        setIsResending(true);
+        try {
+            const res = await api.post('/Auth/resend-invitation', { email: inviteEmail.trim() });
+            toast.success(res.data?.message || 'Setup invitation sent.');
+            setInviteEmail('');
+        } catch (err) {
+            toast.error(getApiErrorMessage(err, 'Unable to resend the invitation.'));
+        } finally {
+            setIsResending(false);
         }
     };
 
@@ -48,19 +78,40 @@ const BulkImportModal = ({ onClose, onRefresh }) => {
                     <div>
                         <strong>Instructions:</strong> Use columns: 
                         <code className="d-block mt-1">Full Name | Email | Flat No | Phone</code>
-                        Imported residents will receive a temporary password.
+                        <small>Use the row house number in the spreadsheet’s Flat No column.</small>
+                        Imported residents receive a personal password setup link by email.
                     </div>
                 </div>
 
                 <div className="border-dashed rounded-3 p-5 text-center bg-light mb-4" 
                      style={{ border: '2px dashed #ccc' }}>
-                    <input type="file" id="excelFile" hidden accept=".xlsx, .xls" onChange={handleFileChange} />
+                    <input type="file" id="excelFile" hidden accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={handleFileChange} />
                     <label htmlFor="excelFile" style={{ cursor: 'pointer' }}>
                         <FaUpload size={40} className="text-muted mb-3" />
                         <p className="mb-0 fw-bold">{file ? file.name : "Click to select Excel file"}</p>
-                        <small className="text-muted">Supports .xlsx and .xls only</small>
+                        <small className="text-muted">.xlsx only, up to 5 MB</small>
                     </label>
                 </div>
+
+                {result && (
+                    <div className="alert alert-success" role="status">
+                        <div className="fw-bold mb-1">Import complete</div>
+                        <div className="small">{result.created || 0} created · {result.invitationsSent || 0} invitations sent · {result.skipped || 0} skipped</div>
+                        {result.failures?.length > 0 && (
+                            <ul className="small mt-2 mb-0 ps-3">
+                                {result.failures.map((failure, index) => <li key={`${failure.email}-${index}`}>{failure.email || 'Row'}: {failure.message}</li>)}
+                            </ul>
+                        )}
+                    </div>
+                )}
+
+                <form onSubmit={handleResendInvitation} className="border-top pt-3 mt-3">
+                    <label htmlFor="inviteEmail" className="form-label small fw-bold">RESEND PASSWORD SETUP LINK</label>
+                    <div className="input-group">
+                        <input id="inviteEmail" type="email" className="form-control" placeholder="resident@example.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} required />
+                        <button className="btn btn-outline-primary" disabled={isResending}>{isResending ? 'Sending…' : 'Resend'}</button>
+                    </div>
+                </form>
 
                 <div className="d-flex gap-2">
                     <button className="btn btn-success w-100 fw-bold py-2" 

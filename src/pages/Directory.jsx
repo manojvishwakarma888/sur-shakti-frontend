@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import CommunityPageHero from '../components/CommunityPageHero';
 import Sidebar from '../components/Sidebar';
 import { 
   FaShieldAlt, FaFireExtinguisher, FaAmbulance, 
@@ -52,17 +53,17 @@ const Directory = () => {
   );
 
   return (
-    <>
-      <h2 className="fw-bold text-dark mb-4">Community Directory</h2>
+    <div className="directory-screen">
+      <CommunityPageHero pathname="/directory" title="Community Directory" description="Call essential services or find a neighbour." />
 
         {/* --- SECTION 1: EMERGENCY CONTACTS --- */}
         <h6 className="fw-bold text-danger mb-3 text-uppercase small" style={{letterSpacing:'1px'}}>
             <span className="me-2">*</span>Emergency Contacts
         </h6>
-        <div className="row g-4 mb-5">
+        <div className="row g-2 g-md-4 mb-4 emergency-grid">
             {emergencyContacts.map((item, index) => (
-                <div key={index} className="col-md-4">
-                    <div className="card border-0 shadow-sm rounded-4 h-100" style={{backgroundColor: item.bg}}>
+                <div key={index} className="col-4">
+                    <a href={`tel:${item.number}`} className="card emergency-card border-0 shadow-sm rounded-4 h-100 text-decoration-none" style={{backgroundColor: item.bg}} aria-label={`Call ${item.name} at ${item.number}`}>
                         <div className="card-body d-flex align-items-center p-4">
                             <div className="rounded-circle p-3 me-3 d-flex align-items-center justify-content-center bg-white" 
                                  style={{width:'50px', height:'50px', color: item.text}}>
@@ -73,7 +74,7 @@ const Directory = () => {
                                 <span className="fs-5 fw-bold" style={{color: item.text}}>{item.number}</span>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             ))}
         </div>
@@ -82,10 +83,10 @@ const Directory = () => {
         <h6 className="fw-bold text-secondary mb-3 text-uppercase small" style={{letterSpacing:'1px'}}>
             Service Providers & Office
         </h6>
-        <div className="row g-4 mb-5">
+        <div className="row g-3 mb-5 service-grid">
             {serviceContacts.map((item, index) => (
                 <div key={index} className="col-md-4">
-                    <div className="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                    <a href={`tel:${item.number.replace(/\s/g, '')}`} className="card contact-card border-0 shadow-sm rounded-4 h-100 bg-white text-decoration-none" aria-label={`Call ${item.name}`}>
                         <div className="card-body d-flex align-items-center p-4">
                             <div className="rounded-circle p-3 me-3 d-flex align-items-center justify-content-center bg-light text-secondary" 
                                  style={{width:'50px', height:'50px'}}>
@@ -96,7 +97,7 @@ const Directory = () => {
                                 <small className="text-muted fw-bold">{item.number}</small>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             ))}
         </div>
@@ -104,12 +105,12 @@ const Directory = () => {
         {/* --- SECTION 3: RESIDENT SEARCH --- */}
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
             <h5 className="fw-bold text-dark m-0">All Residents ({members.length})</h5>
-            <div className="input-group shadow-sm" style={{maxWidth: '300px'}}>
+            <div className="input-group shadow-sm directory-search" style={{maxWidth: '300px'}}>
                 <span className="input-group-text bg-white border-0 ps-3"><FaSearch className="text-muted"/></span>
                 <input 
                     type="text" 
                     className="form-control border-0 py-2" 
-                    placeholder="Search by Name or Flat..." 
+                    placeholder="Search by Name or Row House..." 
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                 />
@@ -133,7 +134,7 @@ const Directory = () => {
                             <div className="overflow-hidden">
                                 <h6 className="fw-bold text-dark mb-1 text-truncate">{member.fullName}</h6>
                                 <div className="d-flex gap-3">
-                                    <span className="badge bg-light text-dark border">Flat {member.flatNo}</span>
+                                    <span className="badge bg-light text-dark border">Row house {member.flatNo}</span>
                                     {member.phoneNumber && (
                                         <a href={`tel:${member.phoneNumber}`} className="text-decoration-none text-muted small d-flex align-items-center">
                                             <FaPhoneAlt size={10} className="me-1"/> {member.phoneNumber}
@@ -147,7 +148,7 @@ const Directory = () => {
             ))}
         </div>
 
-    </>
+    </div>
   );
 };
 

@@ -1,8 +1,9 @@
+import BrandLogo from '../components/BrandLogo';
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom'; 
 import api, { BACKEND_URL } from '../services/api'; 
-import { FaBuilding, FaEnvelope, FaLock } from 'react-icons/fa'; 
+import { FaEnvelope, FaLock } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { isPasswordUpdateDue } from '../utils/passwordPolicy';
 import './Login.css';
@@ -80,7 +81,7 @@ const Login = () => {
         <div className="col-md-6 login-brand-section d-none d-md-flex flex-column justify-content-between p-5 text-white">
           <div>
             <div className="brand-header">
-              <div className="brand-icon-box"><FaBuilding size={24} /></div>
+              <BrandLogo size={104} />
               <span className="fw-bold ms-2 fs-4">Sur Shakti Connect</span>
             </div>
             
@@ -129,6 +130,7 @@ const Login = () => {
         {/* RIGHT SIDE: LOGIN FORM */}
         <div className="col-12 col-md-6 login-form-section d-flex align-items-center justify-content-center bg-white p-4">
           <div className="form-wrapper w-100" style={{ maxWidth: '400px' }}> 
+            <div className="d-md-none text-center mb-4"><BrandLogo size={144} /><p className="fw-bold mt-2 mb-0">Sur Shakti Connect</p></div>
             <h2 className="form-title fw-bold text-dark">Welcome Back</h2>
             <p className="form-subtitle text-muted mb-4">Please enter your details to sign in.</p>
 
