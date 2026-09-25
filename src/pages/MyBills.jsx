@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import React, { useEffect, useState, useContext } from 'react';
 import api, { getApiErrorMessage } from '../services/api';
 import BillCreditSummary from '../components/BillCreditSummary';
@@ -62,6 +63,7 @@ const extractTransactionEntityId = (payload) => {
 };
 
 const MyBills = () => {
+  useLanguage();
   const { user } = useContext(AuthContext);
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -184,7 +186,7 @@ const MyBills = () => {
 
   const totalDue = bills.filter(bill => !billIsPaid(bill)).reduce((sum, bill) => sum + billPayableAmount(bill), 0);
   const unpaidCount = bills.filter(bill => !billIsPaid(bill)).length;
-  const emptyBills = <div className="empty-state"><h3 className="h5">{bills.length ? 'No matching bills' : 'No bills yet'}</h3><p>{bills.length ? 'Try another month or clear your filters.' : 'Your bills will appear here when the society issues them.'}</p>{bills.length > 0 && <button className="btn btn-outline-primary" onClick={() => { setFilterStatus('All'); setFilterMonth('All'); }}>Clear filters</button>}</div>;
+  const emptyBills = <div className="empty-state"><h3 className="h5">{bills.length ? uiText("No matching bills") : uiText("No bills yet")}</h3><p>{bills.length ? uiText("Try another month or clear your filters.") : uiText("Your bills will appear here when the society issues them.")}</p>{bills.length > 0 && <button className="btn btn-outline-primary" onClick={() => { setFilterStatus('All'); setFilterMonth('All'); }}>{uiText("Clear filters")}</button>}</div>;
 
   const filteredBills = bills.filter(bill => {
     const isPaid = billIsPaid(bill);
@@ -201,7 +203,7 @@ const MyBills = () => {
   // --- ACTIONS ---
   const handleOpenPayment = (bill) => setSelectedBill(bill);
   const handleOpenReceipt = async (bill) => {
-    if (bill.paidByCredit) { toast.info('This bill was covered by credit. No payment receipt is needed.'); return; }
+    if (bill.paidByCredit) { toast.info(uiText("This bill was covered by credit. No payment receipt is needed.")); return; }
     const transaction = transactions.find(t => String(t.billId) === billPrimaryId(bill) && ['Verified', 'Synced'].includes(t.status));
     let id = transaction?.transactionId || bill.paymentTransactionId;
     try {
@@ -210,7 +212,7 @@ const MyBills = () => {
         id = pages.flatMap(page => page.items).find(t => t.receiptAvailable)?.transactionId;
       }
       if (!id) {
-        toast.info('No verified receipt is available for this bill.');
+        toast.info(uiText("No verified receipt is available for this bill."));
         return;
       }
       const { data } = await api.get('/payment-transactions/' + id + '/receipt');
@@ -220,7 +222,7 @@ const MyBills = () => {
   };
 
   const handleExport = () => {
-    if (filteredBills.length === 0) return toast.warning("No records to export.");
+    if (filteredBills.length === 0) return toast.warning(uiText("No records to export."));
     const headers = ["Row House No", "Resident Name", "Month", "Type", "Amount", "Status"];
     const csvRows = filteredBills.map(b => {
       const status = (b.isPaid ?? b.IsPaid) ? "Paid" : "Unpaid";
@@ -232,7 +234,7 @@ const MyBills = () => {
     link.href = URL.createObjectURL(blob);
     link.download = `SurShakti_Bills_${filterMonth}_${filterStatus}.csv`;
     link.click();
-    toast.success("Download started!");
+    toast.success(uiText("Download started!"));
   };
 
   const openEditModal = (bill) => {
@@ -251,16 +253,16 @@ const MyBills = () => {
     e.preventDefault();
     try {
       await api.put(`Bill/${editingBillId}`, { ...editFormData, amount: parseFloat(editFormData.amount) });
-      toast.success("Bill Updated!");
+      toast.success(uiText("Bill Updated!"));
       setShowEditModal(false);
       fetchBills();
     } catch {
-      toast.error("Update failed.");
+      toast.error(uiText("Update failed."));
     }
   };
 
   const handleMarkAsPaid = async (bill) => {
-    if (cashBusyId !== null || loading || !window.confirm('Confirm receipt of the full CASH payment?')) return;
+    if (cashBusyId !== null || loading || !window.confirm(uiText("Confirm receipt of the full CASH payment?"))) return;
     const billId = billPrimaryId(bill);
     setCashBusyId('cash-' + billId);
     const existing = readPaymentAudit().find(r => normalizeBillId(r.userId) === normalizeBillId(user?.id) && r.billId === billId && r.method === 'CASH' && r.status !== 'synced');
@@ -287,7 +289,7 @@ const MyBills = () => {
       }
       await manualVerifyPaymentTransaction({ paymentTransactionId: id, transactionId: record.transactionId });
       save({ status: 'synced' });
-      toast.success('Cash payment verified.');
+      toast.success(uiText("Cash payment verified."));
       await fetchBills();
     } catch (err) { toast.error(getApiErrorMessage(err)); }
     finally { setCashBusyId(null); }
@@ -333,7 +335,7 @@ const MyBills = () => {
       }
       await submitPaymentTransaction({ paymentTransactionId, transactionId: reference });
       save({ status: 'synced', serverStatus: 'Submitted' });
-      toast.success('Payment submitted successfully!');
+      toast.success(uiText("Payment submitted successfully!"));
       setSelectedBill(null);
       await fetchBills();
     } catch (err) {
@@ -344,53 +346,49 @@ const MyBills = () => {
   return (
     <div className="bills-screen">
       <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold mb-0">{isAdmin ? 'Society bills' : 'My bills'}</h2>
+        <h2 className="fw-bold mb-0">{isAdmin ? uiText("Society bills") : uiText("My bills")}</h2>
         {isAdmin && (
           <button className="btn btn-dark fw-bold btn-sm" onClick={() => setShowGenerateModal(true)}>
-            <FaPlus className="me-2" /> Generate Bill
-          </button>
+            <FaPlus className="me-2" />{' ' + uiText("Generate Bill")}</button>
         )}
       </div>
 
       <BillingNavigation />
-      {loadError && <div className="alert alert-danger" role="alert"><p className="mb-2">{loadError}</p><button className="btn btn-outline-danger" onClick={fetchBills} disabled={loading}>Try again</button></div>}
-      <div className="bill-summary" aria-busy={loading}><div><span>Total amount due</span><strong>{loading ? 'Loading…' : loadError ? 'Unavailable' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalDue)}</strong></div><div><span>Unpaid bills</span><strong>{loading ? '—' : loadError ? '—' : unpaidCount}</strong></div></div>
+      {loadError && <div className="alert alert-danger" role="alert"><p className="mb-2">{loadError}</p><button className="btn btn-outline-danger" onClick={fetchBills} disabled={loading}>{uiText("Try again")}</button></div>}
+      <div className="bill-summary" aria-busy={loading}><div><span>{uiText("Total amount due")}</span><strong>{loading ? uiText("Loading…") : loadError ? uiText("Unavailable") : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalDue)}</strong></div><div><span>{uiText("Unpaid bills")}</span><strong>{loading ? '—' : loadError ? '—' : unpaidCount}</strong></div></div>
       {unsyncedPayments > 0 && (
         <div className="alert alert-warning d-flex justify-content-between align-items-center rounded-4 shadow-sm" role="alert">
           <div className="small fw-semibold mb-0">
-            {unsyncedPayments} payment {unsyncedPayments > 1 ? 'records are' : 'record is'} not confirmed. Refresh status first. If still pending, reopen the payment with the same reference or retry the Cash action.
-          </div>
+            {unsyncedPayments}{' ' + uiText("payment") + ' '}{unsyncedPayments > 1 ? uiText("records are") : uiText("record is")}{' ' + uiText("not confirmed. Refresh status first. If still pending, reopen the payment with the same reference or retry the Cash action.")}</div>
           <button
             type="button"
             className="btn btn-sm btn-outline-dark"
             onClick={fetchBills}
             disabled={loading}
-          >
-            Refresh status
-          </button>
+          >{uiText("Refresh status")}</button>
         </div>
       )}
 
       <div className="bg-white p-3 rounded-4 shadow-sm mb-4 bill-filter-panel">
         <div className="row g-3 align-items-end">
           <div className="col-md-4">
-            <label className="fw-bold small text-muted mb-1">STATUS</label>
-            <div className="btn-group w-100 shadow-sm" role="group" aria-label="Filter bills by status">
+            <label className="fw-bold small text-muted mb-1">{uiText("STATUS")}</label>
+            <div className="btn-group w-100 shadow-sm" role="group" aria-label={uiText("Filter bills by status")}>
               {['All', 'Paid', 'Unpaid'].map(s => (
-                <button key={s} aria-pressed={filterStatus === s} className={`btn btn-sm ${filterStatus === s ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => setFilterStatus(s)}>{s}</button>
+                <button key={s} aria-pressed={filterStatus === s} className={`btn btn-sm ${filterStatus === s ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => setFilterStatus(s)}>{uiText(s)}</button>
               ))}
             </div>
           </div>
           <div className="col-md-4">
-            <label htmlFor="bill-month-filter" className="fw-bold small text-muted mb-1">MONTH</label>
+            <label htmlFor="bill-month-filter" className="fw-bold small text-muted mb-1">{uiText("MONTH")}</label>
             <select id="bill-month-filter" className="form-select form-select-sm" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}>
-              <option value="All">All Months</option>
+              <option value="All">{uiText("All Months")}</option>
               {displayMonths.map((m, i) => <option key={i} value={m}>{m}</option>)}
-              <option value="Others">Others</option>
+              <option value="Others">{uiText("Others")}</option>
             </select>
           </div>
           <div className="col-md-4">
-            {isAdmin && <button onClick={handleExport} className="btn btn-sm btn-outline-primary w-100 fw-bold"><FaFileCsv className="me-2"/>Export CSV</button>}
+            {isAdmin && <button onClick={handleExport} className="btn btn-sm btn-outline-primary w-100 fw-bold"><FaFileCsv className="me-2"/>{uiText("Export CSV")}</button>}
           </div>
         </div>
       </div>
@@ -403,12 +401,12 @@ const MyBills = () => {
             <table className="table table-hover align-middle mb-0">
               <thead className="bg-light">
                 <tr className="small text-uppercase text-muted">
-                  {isAdmin && <th className="ps-4">Resident</th>}
-                  <th>Month</th>
-                  <th>Type</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th className="text-end pe-4">Actions</th>
+                  {isAdmin && <th className="ps-4">{uiText("Resident")}</th>}
+                  <th>{uiText("Month")}</th>
+                  <th>{uiText("Type")}</th>
+                  <th>{uiText("Amount")}</th>
+                  <th>{uiText("Status")}</th>
+                  <th className="text-end pe-4">{uiText("Actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -436,7 +434,7 @@ const MyBills = () => {
                       {isAdmin && (
                         <td className="ps-4">
                           <div className="fw-bold text-dark">{bill.residentName}</div>
-                          <div className="text-muted small">Row house {bill.flatNo}</div>
+                          <div className="text-muted small">{uiText("Row house") + ' '}{bill.flatNo}</div>
                         </td>
                       )}
                       <td className="fw-bold">{bill.month}</td>
@@ -444,29 +442,29 @@ const MyBills = () => {
                       <td className="fw-bold text-primary">₹{billPayableAmount(bill).toLocaleString('en-IN')}<BillCreditSummary bill={bill} /></td>
                       <td>
                         <span className={`badge rounded-pill px-3 ${isPaid ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger'}`}>
-                          {isPaid ? (bill.paidByCredit ? 'Covered by credit' : 'Paid') : transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted') ? 'Under review' : 'Unpaid'}
+                          {isPaid ? (bill.paidByCredit ? uiText("Covered by credit") : uiText("Paid")) : transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted') ? uiText("Under review") : uiText("Unpaid")}
                         </span>
                       </td>
                       <td className="text-end pe-4">
                         <div className="d-flex flex-wrap justify-content-end gap-2">
                           {isPaid ? (
-                            <button className="btn btn-light btn-sm rounded-circle border shadow-sm" onClick={() => handleOpenReceipt(bill)} title="Download Receipt">
+                            <button className="btn btn-light btn-sm rounded-circle border shadow-sm" onClick={() => handleOpenReceipt(bill)} title={uiText("Download Receipt")}>
                               <FaDownload size={14} className="text-secondary" />
                             </button>
                           ) : (
                             <>
                               {isAdmin ? (
                                 <>
-                                  <button className="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" disabled={transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => openEditModal(bill)} title="Edit Bill">
+                                  <button className="btn btn-outline-secondary btn-sm rounded-circle shadow-sm" disabled={transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => openEditModal(bill)} title={uiText("Edit Bill")}>
                                     <FaPen size={12} />
                                   </button>
                                   
-                                  <button className="btn btn-outline-primary btn-sm rounded-circle shadow-sm" disabled={cashBusyId !== null || loading || transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => handleMarkAsPaid(bill)} title="Mark Paid (Cash)">
+                                  <button className="btn btn-outline-primary btn-sm rounded-circle shadow-sm" disabled={cashBusyId !== null || loading || transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => handleMarkAsPaid(bill)} title={uiText("Mark Paid (Cash)")}>
                                     <FaCheck size={14} />
                                   </button>
                                 </>
                               ) : (
-                                <button className="btn btn-primary btn-sm rounded-pill px-3 fw-bold" disabled={transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => handleOpenPayment(bill)}>Pay Now</button>
+                                <button className="btn btn-primary btn-sm rounded-pill px-3 fw-bold" disabled={transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => handleOpenPayment(bill)}>{uiText("Pay Now")}</button>
                               )}
                             </>
                           )}
@@ -502,45 +500,43 @@ const MyBills = () => {
                         {isAdmin ? (
                           <>
                             <div className="fw-bold text-dark">{bill.residentName}</div>
-                            <div className="text-muted small">Row house {bill.flatNo} • {bill.month}</div>
+                            <div className="text-muted small">{uiText("Row house") + ' '}{bill.flatNo} • {bill.month}</div>
                           </>
                         ) : (
                           <>
                             <div className="fw-bold text-dark">{bill.month}</div>
-                            <div className="text-muted small">{type} Bill</div>
+                            <div className="text-muted small">{type}{' ' + uiText("Bill")}</div>
                           </>
                         )}
                       </div>
                       <span className={`badge rounded-pill px-3 ${isPaid ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger'}`}>
-                        {isPaid ? (bill.paidByCredit ? 'Covered by credit' : 'Paid') : transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted') ? 'Under review' : 'Unpaid'}
+                        {isPaid ? (bill.paidByCredit ? uiText("Covered by credit") : uiText("Paid")) : transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted') ? uiText("Under review") : uiText("Unpaid")}
                       </span>
                     </div>
                     
                     <div className="mobile-bill-footer">
                       <div>
                         <div className="fw-bold text-primary fs-5">₹{billPayableAmount(bill).toLocaleString('en-IN')}</div><BillCreditSummary bill={bill} />
-                        {Number(bill.penaltyAmount ?? bill.PenaltyAmount ?? 0) > 0 && <small className="text-danger">Includes ₹{Number(bill.penaltyAmount ?? bill.PenaltyAmount).toLocaleString('en-IN')} late fee</small>}
+                        {Number(bill.penaltyAmount ?? bill.PenaltyAmount ?? 0) > 0 && <small className="text-danger">{uiText("Includes ₹")}{Number(bill.penaltyAmount ?? bill.PenaltyAmount).toLocaleString('en-IN')}{' ' + uiText("late fee")}</small>}
                       </div>
                       
                       <div className="mobile-bill-actions">
                         {isPaid ? (
                           <button className="btn btn-light btn-sm rounded-pill border px-3" onClick={() => handleOpenReceipt(bill)}>
-                            <FaDownload className="me-1 text-secondary" size={12} /> Receipt
-                          </button>
+                            <FaDownload className="me-1 text-secondary" size={12} />{' ' + uiText("Receipt")}</button>
                         ) : (
                           <>
                             {isAdmin ? (
                               <>
-                                <button className="btn btn-outline-secondary btn-sm bill-edit-button" aria-label="Edit bill" disabled={transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => openEditModal(bill)} title="Edit Bill">
+                                <button className="btn btn-outline-secondary btn-sm bill-edit-button" aria-label={uiText("Edit bill")} disabled={transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => openEditModal(bill)} title={uiText("Edit Bill")}>
                                   <FaPen size={12} />
                                 </button>
                                 
                                 <button className="btn btn-outline-primary btn-sm rounded-pill px-3" disabled={cashBusyId !== null || loading || transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => handleMarkAsPaid(bill)}>
-                                  <FaCheck className="me-1" size={12} /> Cash
-                                </button>
+                                  <FaCheck className="me-1" size={12} />{' ' + uiText("Cash")}</button>
                               </>
                             ) : (
-                              <button className="btn btn-primary btn-sm rounded-pill px-4 fw-bold" disabled={transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => handleOpenPayment(bill)}>Pay Now</button>
+                              <button className="btn btn-primary btn-sm rounded-pill px-4 fw-bold" disabled={transactions.some(t => String(t.billId) === billPrimaryId(bill) && t.status === 'Submitted')} onClick={() => handleOpenPayment(bill)}>{uiText("Pay Now")}</button>
                             )}
                           </>
                         )}
@@ -563,14 +559,14 @@ const MyBills = () => {
       {showEditModal && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
           <div className="bg-white rounded-4 shadow-lg p-4" style={{ width: '400px' }}>
-            <h5 className="fw-bold mb-3">Edit Bill Details</h5>
+            <h5 className="fw-bold mb-3">{uiText("Edit Bill Details")}</h5>
             <form onSubmit={handleEditSubmit}>
               <div className="mb-3">
-                <label className="small fw-bold text-muted">AMOUNT (₹)</label>
+                <label className="small fw-bold text-muted">{uiText("AMOUNT (₹)")}</label>
                 <input type="number" className="form-control" value={editFormData.amount} onChange={e => setEditFormData({...editFormData, amount: e.target.value})} />
               </div>
               <div className="mb-3">
-                <label className="small fw-bold text-muted">BILLING MONTH</label>
+                <label className="small fw-bold text-muted">{uiText("BILLING MONTH")}</label>
                 <input 
                   type="month" 
                   className="form-control" 
@@ -581,19 +577,19 @@ const MyBills = () => {
                     setEditFormData({...editFormData, month: formatted});
                   }} 
                 />
-                <small className="text-primary">Current: {editFormData.month}</small>
+                <small className="text-primary">{uiText("Current:") + ' '}{editFormData.month}</small>
               </div>
               <div className="mb-4">
-                <label className="small fw-bold text-muted">BILL TYPE</label>
+                <label className="small fw-bold text-muted">{uiText("BILL TYPE")}</label>
                 <select className="form-select" value={editFormData.billType} onChange={e => setEditFormData({...editFormData, billType: e.target.value})}>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Penalty">Penalty</option>
-                  <option value="Event">Event</option>
+                  <option value="Maintenance">{uiText("Maintenance")}</option>
+                  <option value="Penalty">{uiText("Penalty")}</option>
+                  <option value="Event">{uiText("Event")}</option>
                 </select>
               </div>
               <div className="d-flex flex-wrap gap-2">
-                <button type="submit" className="btn btn-dark w-100 fw-bold">Update</button>
-                <button type="button" className="btn btn-light w-100" onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-dark w-100 fw-bold">{uiText("Update")}</button>
+                <button type="button" className="btn btn-light w-100" onClick={() => setShowEditModal(false)}>{uiText("Cancel")}</button>
               </div>
             </form>
           </div>

@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import React, { useContext } from 'react';
 // Import Context (Up 1 level)
 import { AuthContext } from '../context/AuthContext';
@@ -7,10 +8,11 @@ import AdminDashboard from './dashboard/AdminDashboard';
 import ResidentDashboard from './dashboard/ResidentDashboard';
 
 const Dashboard = () => {
+  useLanguage();
   const { user } = useContext(AuthContext);
 
   if (!user) {
-    return <div className="d-flex justify-content-center align-items-center vh-100">Loading...</div>;
+    return <div className="d-flex justify-content-center align-items-center vh-100">{uiText("Loading...")}</div>;
   }
 
   // The Traffic Cop Logic

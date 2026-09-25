@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import BrandLogo from '../components/BrandLogo';
 import React, { useState } from 'react';
 import api from '../services/api';
@@ -6,6 +7,7 @@ import { toast } from 'react-toastify';
 import { FaBuilding, FaUser, FaLock, FaPhone, FaKey, FaEnvelope } from 'react-icons/fa';
 
 const Register = () => {
+  useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
@@ -30,12 +32,12 @@ const Register = () => {
       // Matches your RegisterDto in C#
       await api.post('/auth/register', formData);
       
-      toast.success("Registration Successful! Please Login.");
+      toast.success(uiText("Registration Successful! Please Login."));
       navigate('/login'); 
     } catch (err) {
       console.error(err);
       // Show specific error from backend (e.g., "Invalid Society Code")
-      toast.error(err.response?.data?.Message || "Registration failed.");
+      toast.error(err.response?.data?.Message || uiText("Registration failed."));
     } finally {
       setLoading(false);
     }
@@ -48,39 +50,39 @@ const Register = () => {
           
           <div className="text-center mb-4">
             <BrandLogo size={128} className="mb-3" />
-            <h3 className="fw-bold text-dark">Join Sur Shakti</h3>
-            <p className="text-muted small">Resident Self-Registration</p>
+            <h3 className="fw-bold text-dark">{uiText("Join Sur Shakti")}</h3>
+            <p className="text-muted small">{uiText("Resident Self-Registration")}</p>
           </div>
 
           <form onSubmit={handleSubmit}>
             {/* Full Name */}
             <div className="mb-3 input-group">
               <span className="input-group-text bg-light border-0"><FaUser className="text-muted"/></span>
-              <input type="text" name="fullName" className="form-control bg-light border-0" placeholder="Full Name" required onChange={handleChange} />
+              <input type="text" name="fullName" className="form-control bg-light border-0" placeholder={uiText("Full Name")} required onChange={handleChange} />
             </div>
 
             {/* Flat & Phone Row */}
             <div className="row g-2 mb-3">
               <div className="col-6 input-group">
                 <span className="input-group-text bg-light border-0"><FaBuilding className="text-muted"/></span>
-                <input type="text" name="flatNo" className="form-control bg-light border-0" placeholder="Row House No" required onChange={handleChange} />
+                <input type="text" name="flatNo" className="form-control bg-light border-0" placeholder={uiText("Row House No")} required onChange={handleChange} />
               </div>
               <div className="col-6 input-group">
                 <span className="input-group-text bg-light border-0"><FaPhone className="text-muted"/></span>
-                <input type="tel" name="phoneNumber" className="form-control bg-light border-0" placeholder="Mobile" required onChange={handleChange} />
+                <input type="tel" name="phoneNumber" className="form-control bg-light border-0" placeholder={uiText("Mobile")} required onChange={handleChange} />
               </div>
             </div>
 
             {/* Email */}
             <div className="mb-3 input-group">
                <span className="input-group-text bg-light border-0"><FaEnvelope className="text-muted"/></span>
-               <input type="email" name="email" className="form-control bg-light border-0" placeholder="Email Address" required onChange={handleChange} />
+               <input type="email" name="email" className="form-control bg-light border-0" placeholder={uiText("Email Address")} required onChange={handleChange} />
             </div>
 
             {/* Password */}
             <div className="mb-3 input-group">
               <span className="input-group-text bg-light border-0"><FaLock className="text-muted"/></span>
-              <input type="password" name="password" className="form-control bg-light border-0" placeholder="Create Password" required onChange={handleChange} />
+              <input type="password" name="password" className="form-control bg-light border-0" placeholder={uiText("Create Password")} required onChange={handleChange} />
             </div>
 
             {/* Society Code (Security Field) */}
@@ -91,21 +93,21 @@ const Register = () => {
                   type="text" 
                   name="societyCode" 
                   className="form-control border-danger" 
-                  placeholder="Society Code (Ask Secretary)" 
+                  placeholder={uiText("Society Code (Ask Secretary)")} 
                   required 
                   onChange={handleChange} 
                 />
               </div>
-              <small className="text-danger" style={{fontSize: '0.7rem'}}>* Required for verification</small>
+              <small className="text-danger" style={{fontSize: '0.7rem'}}>{uiText("* Required for verification")}</small>
             </div>
 
             <button type="submit" className="btn btn-primary w-100 fw-bold py-2 shadow-sm" disabled={loading}>
-              {loading ? 'Verifying...' : 'Create Account'}
+              {loading ? uiText("Verifying...") : uiText("Create Account")}
             </button>
           </form>
 
           <div className="text-center mt-4 border-top pt-3">
-            <small className="text-muted">Already have an account? <Link to="/login" className="text-primary fw-bold text-decoration-none">Sign In</Link></small>
+            <small className="text-muted">{uiText("Already have an account?") + ' '}<Link to="/login" className="text-primary fw-bold text-decoration-none">{uiText("Sign In")}</Link></small>
           </div>
 
         </div>

@@ -32,6 +32,14 @@ Browser tests use mocked API responses and cover narrow layouts, drawer focus, p
 - Controls accommodate touch, safe areas, keyboard focus and reduced motion.
 - PDF generation libraries load only when downloading a receipt.
 
+## Languages
+
+- English is the default. The globe button at the top right switches to हिन्दी or ગુજરાતી on public and signed-in pages.
+- The choice is stored on this device; switching does not navigate, reload, or reset forms. Keyboard navigation, screen-reader announcements and reduced motion are supported.
+- UI copy lives in `src/i18n/messages.js` and `src/i18n/guidance.js`. Components subscribe with `useLanguage()` and render copy with `t('English key', { variable: value })`. Missing keys fall back to English.
+- Keep API enum values, React keys, names, resident-written content, references and payment amounts unchanged. Translate labels at render time, never stored form values. Server-provided free-text messages retain their original language.
+- Validate with `node scripts/check-translations.mjs`, `npm test`, and `npx playwright test tests/language.spec.js`.
+
 ## Next improvements
 
 - Add server-sourced payment review statuses so residents can distinguish awaiting verification from unpaid bills.

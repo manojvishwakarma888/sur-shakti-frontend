@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import { paymentStatusLabel } from '../utils/billing';
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
@@ -19,6 +20,7 @@ function date(value) {
   return value && !Number.isNaN(parsed.getTime()) ? parsed.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Date unavailable';
 }
 function Activity({ row, names }) {
+  useLanguage();
   const before = snapshot(row.before), after = snapshot(row.after);
   const data = Object.keys(after).length ? after : before;
   const action = { Added: 'added', Modified: 'updated', Deleted: 'removed' }[row.action] || row.action || 'changed';
@@ -39,16 +41,17 @@ function Activity({ row, names }) {
   };
   return <article className={"audit-activity border rounded-3 p-3 mb-3 " + (data.kind === "Adjustment" ? Number(data.amount) < 0 ? "audit-credit" : "audit-debit" : "")}>
     <h4 className="h6 fw-bold mb-2">{title}</h4>
-    <p className="small text-muted mb-2">{date(row.at)} · Changed by {names[row.actorId] || 'name unavailable'}</p>
+    <p className="small text-muted mb-2">{date(row.at)}{' ' + uiText("· Changed by") + ' '}{names[row.actorId] || uiText("name unavailable")}</p>
     {data.description && <p className="mb-2">{data.description}</p>}
-    {row.action === 'Added' && data.kind === 'Adjustment' && Number(data.amount) !== 0 && Number.isFinite(Number(data.amount)) && <p className="small mb-2">{Number(data.amount) > 0 ? 'Added to the amount owed.' : 'Credited to the row house account.'}</p>}
-    {keys.length > 0 ? <details className="mt-2"><summary>View changes</summary><div className="audit-change-list mt-3">
-      {keys.map(key => <div className="audit-change" key={key}><strong>{labels[key] || key}</strong><div>{row.action !== 'Added' && <span><span className="text-muted">Previously: </span>{format(key, before[key])}<br /></span>}<span className="text-muted">{row.action === 'Deleted' ? 'After removal: ' : 'Now: '}</span>{format(key, after[key])}</div></div>)}
-    </div></details> : <p className="small text-muted">No additional change details are available.</p>}
+    {row.action === 'Added' && data.kind === 'Adjustment' && Number(data.amount) !== 0 && Number.isFinite(Number(data.amount)) && <p className="small mb-2">{Number(data.amount) > 0 ? uiText("Added to the amount owed.") : uiText("Credited to the row house account.")}</p>}
+    {keys.length > 0 ? <details className="mt-2"><summary>{uiText("View changes")}</summary><div className="audit-change-list mt-3">
+      {keys.map(key => <div className="audit-change" key={key}><strong>{uiText(labels[key] || key)}</strong><div>{row.action !== 'Added' && <span><span className="text-muted">{uiText("Previously:") + ' '}</span>{format(key, before[key])}<br /></span>}<span className="text-muted">{row.action === 'Deleted' ? uiText("After removal: ") : uiText("Now: ")}</span>{format(key, after[key])}</div></div>)}
+    </div></details> : <p className="small text-muted">{uiText("No additional change details are available.")}</p>}
   </article>;
 }
 
 export default function AuditHistory() {
+  useLanguage();
   const { user } = useContext(AuthContext);
   const [entity, setEntity] = useState('');
   const [recordId, setRecordId] = useState('');
@@ -76,17 +79,17 @@ export default function AuditHistory() {
   const names = Object.fromEntries(residents.filter(person => person.fullName).map(person => [person.id, person.fullName]));
   if (user?.id) names[user.id] = user.fullName + ' (you)';
   return <section>
-    <h3 className="h5">Activity history</h3>
-    <p className="text-muted">See what changed in society records, when it changed, and who made the change. This history is read-only.</p>
+    <h3 className="h5">{uiText("Activity history")}</h3>
+    <p className="text-muted">{uiText("See what changed in society records, when it changed, and who made the change. This history is read-only.")}</p>
     <form onSubmit={event => { event.preventDefault(); reload({ entity: entity || undefined, recordId: recordId.trim() || undefined }); }}>
-      <fieldset disabled={busy}><div className="maintenance-form-grid"><Field label="Show activity for"><select className="form-select" value={entity} onChange={event => setEntity(event.target.value)}><option value="">All activity</option>{Object.entries(categories).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field></div>
-      <details className="my-3"><summary>Find a specific record (optional)</summary><div className="mt-2"><Field label="Record number"><input className="form-control" value={recordId} onChange={event => setRecordId(event.target.value)} /></Field><small className="text-muted">Use this only if you know the record number. Leave it blank to see all records.</small></div></details>
-      <div className="d-flex flex-wrap gap-2 mb-3"><button className="btn btn-primary">Show activity</button><button type="button" className="btn btn-outline-secondary" onClick={() => { setEntity(''); setRecordId(''); reload({}); }}>Reset filters</button></div></fieldset>
+      <fieldset disabled={busy}><div className="maintenance-form-grid"><Field label={uiText("Show activity for")}><select className="form-select" value={entity} onChange={event => setEntity(event.target.value)}><option value="">{uiText("All activity")}</option>{Object.entries(categories).map(([value, label]) => <option key={value} value={value}>{uiText(label)}</option>)}</select></Field></div>
+      <details className="my-3"><summary>{uiText("Find a specific record (optional)")}</summary><div className="mt-2"><Field label={uiText("Record number")}><input className="form-control" value={recordId} onChange={event => setRecordId(event.target.value)} /></Field><small className="text-muted">{uiText("Use this only if you know the record number. Leave it blank to see all records.")}</small></div></details>
+      <div className="d-flex flex-wrap gap-2 mb-3"><button className="btn btn-primary">{uiText("Show activity")}</button><button type="button" className="btn btn-outline-secondary" onClick={() => { setEntity(''); setRecordId(''); reload({}); }}>{uiText("Reset filters")}</button></div></fieldset>
     </form>
     <ErrorMessage error={error} />
-    {error && <button className="btn btn-outline-primary mb-3" onClick={() => reload(query, skip)}>Try again</button>}
-    {busy && <p role="status">Loading activity…</p>}
-    {!busy && !error && !rows.length && <p>No activity found. Changes will appear here after they are recorded.</p>}
+    {error && <button className="btn btn-outline-primary mb-3" onClick={() => reload(query, skip)}>{uiText("Try again")}</button>}
+    {busy && <p role="status">{uiText("Loading activity…")}</p>}
+    {!busy && !error && !rows.length && <p>{uiText("No activity found. Changes will appear here after they are recorded.")}</p>}
     {rows.map(row => <Activity key={row.id} row={row} names={names} />)}
     {!error && <Pager skip={skip} count={rows.length} busy={busy} onPage={offset => reload(query, offset)} />}
   </section>;

@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import BrandLogo from './BrandLogo';
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
@@ -20,6 +21,7 @@ import {
 } from 'react-icons/fa';
 
 const Sidebar = ({ isOpen, toggle }) => {
+  useLanguage();
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -61,7 +63,7 @@ const Sidebar = ({ isOpen, toggle }) => {
 
   return (
     <div 
-        id="app-sidebar" aria-label="Community navigation" role={isOpen ? "dialog" : undefined} aria-modal={isOpen ? true : undefined}
+        id="app-sidebar" aria-label={uiText("Community navigation")} role={isOpen ? "dialog" : undefined} aria-modal={isOpen ? true : undefined}
         className={`d-flex flex-column bg-white border-end p-3 sidebar-container ${isOpen ? 'open' : ''}`} 
         style={{ width: '280px', minWidth: '280px' }}
     >
@@ -69,15 +71,15 @@ const Sidebar = ({ isOpen, toggle }) => {
       {/* Brand & Close Button */}
       <div className="d-flex align-items-center justify-content-between mb-4 px-2 mt-2">
         <div className="d-none d-md-flex align-items-center">
-            <Link to="/dashboard" className="brand-home-link" aria-label="Go to home" onClick={toggle}><BrandLogo size={88} className="me-2" /></Link>
+            <Link to="/dashboard" className="brand-home-link" aria-label={uiText("Go to home")} onClick={toggle}><BrandLogo size={88} className="me-2" /></Link>
             <div>
-                <h5 className="fw-bold mb-0 text-dark" style={{letterSpacing: '-0.5px'}}>Sur Shakti</h5>
-                <small className="text-muted" style={{fontSize: '0.75rem'}}>Connect</small>
+                <h5 className="fw-bold mb-0 text-dark" style={{letterSpacing: '-0.5px'}}>{uiText("Sur Shakti")}</h5>
+                <small className="text-muted" style={{fontSize: '0.75rem'}}>{uiText("Connect")}</small>
             </div>
         </div>
         
-        <span className="d-md-none h5 fw-bold mb-0">Menu</span>
-        <button aria-label="Close navigation" className="btn btn-sm text-secondary d-md-none" onClick={toggle}>
+        <span className="d-md-none h5 fw-bold mb-0">{uiText("Menu")}</span>
+        <button aria-label={uiText("Close navigation")} className="btn btn-sm text-secondary d-md-none" onClick={toggle}>
             <FaTimes size={20} />
         </button>
       </div>
@@ -88,7 +90,7 @@ const Sidebar = ({ isOpen, toggle }) => {
             {avatarUrl ? (
                 <img 
                     src={avatarUrl} 
-                    alt="Profile" 
+                    alt={uiText("Profile")} 
                     className="rounded-circle border border-2 border-white shadow-sm"
                     style={{width: '45px', height: '45px', objectFit: 'cover',imageRendering: '-webkit-optimize-contrast'}}
                     onError={(e) => {
@@ -106,26 +108,26 @@ const Sidebar = ({ isOpen, toggle }) => {
 
         <div className="overflow-hidden">
           <h6 className="fw-bold mb-0 text-truncate text-dark">
-            {user?.fullName || "Resident"}
+            {user?.fullName || uiText("Resident")}
           </h6>
           <small className="text-primary fw-bold" style={{fontSize: '0.75rem', letterSpacing: '0.5px'}}>
-             {isAdmin ? "ADMINISTRATOR" : (user?.flatNo ? `Row house No: ${user.flatNo}` : "RESIDENT")}
+             {isAdmin ? uiText("ADMINISTRATOR") : (user?.flatNo ? uiText("Row house No: {{v0}}", { v0: user.flatNo }) : uiText("RESIDENT"))}
           </small>
         </div>
       </div>
 
       {/* Navigation Links */}
       <ul className="nav nav-pills flex-column flex-grow-1 gap-2">
-        <NavItem to="/dashboard" icon={FaThLarge} label="Dashboard" onClick={toggle} />
-        <NavItem to="/my-bills" icon={FaFileInvoiceDollar} label={isAdmin ? "Bills" : "My Bills"} onClick={toggle} />        
-        <NavItem to="/expenses" icon={FaMoneyBillWave} label="Expenses" onClick={toggle} />
-        <NavItem to="/notices" icon={FaBullhorn} label="Notices" onClick={toggle} />
-        <NavItem to="/event-management" icon={FaCalendarAlt} label="Event Management" onClick={toggle} />
-        <NavItem to="/complaints" icon={FaHeadset} label="Helpdesk" onClick={toggle} />
-        <NavItem to="/directory" icon={FaPhoneAlt} label="Directory" onClick={toggle} />
-        <NavItem to="/maintenance" icon={FaBook} label="Accounts" onClick={toggle} />
-        <NavItem to="/notifications" icon={FaBell} label="Notifications" onClick={toggle} />
-        <NavItem to="/profile" icon={FaUserCog} label="Settings" onClick={toggle} />
+        <NavItem to="/dashboard" icon={FaThLarge} label={uiText("Dashboard")} onClick={toggle} />
+        <NavItem to="/my-bills" icon={FaFileInvoiceDollar} label={isAdmin ? uiText("Bills") : uiText("My Bills")} onClick={toggle} />        
+        <NavItem to="/expenses" icon={FaMoneyBillWave} label={uiText("Expenses")} onClick={toggle} />
+        <NavItem to="/notices" icon={FaBullhorn} label={uiText("Notices")} onClick={toggle} />
+        <NavItem to="/event-management" icon={FaCalendarAlt} label={uiText("Event Management")} onClick={toggle} />
+        <NavItem to="/complaints" icon={FaHeadset} label={uiText("Helpdesk")} onClick={toggle} />
+        <NavItem to="/directory" icon={FaPhoneAlt} label={uiText("Directory")} onClick={toggle} />
+        <NavItem to="/maintenance" icon={FaBook} label={uiText("Accounts")} onClick={toggle} />
+        <NavItem to="/notifications" icon={FaBell} label={uiText("Notifications")} onClick={toggle} />
+        <NavItem to="/profile" icon={FaUserCog} label={uiText("Settings")} onClick={toggle} />
       </ul>
 
       {/* Logout */}
@@ -135,15 +137,13 @@ const Sidebar = ({ isOpen, toggle }) => {
             className="nav-link w-100 text-start text-danger fw-bold d-flex align-items-center px-3 hover-danger"
             style={{gap: '12px'}}
         >
-          <FaSignOutAlt /> Sign Out
-        </button>
+          <FaSignOutAlt />{' ' + uiText("Sign Out")}</button>
       </div>
     </div>
   );
 };
 
-const NavItem = ({ to, icon, label, onClick }) => (
-  <li className="nav-item">
+const NavItem = ({ to, icon, label, onClick }) => { useLanguage(); return (<li className="nav-item">
     <NavLink 
       to={to} 
       onClick={onClick} 
@@ -157,10 +157,9 @@ const NavItem = ({ to, icon, label, onClick }) => (
         transition: 'all 0.2s ease'
       })}
     >
-      {React.createElement(icon, { size: 18 })} {label}
+      {React.createElement(icon, { size: 18 })} {uiText(label)}
     </NavLink>
-  </li>
-);
+  </li>); };
 
 export default Sidebar;
 

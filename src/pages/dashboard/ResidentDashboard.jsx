@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage, getLocale } from '../../i18n/language.js';
 import { billPayableAmount } from '../../utils/billing';
 import MobileShortcuts from '../../components/MobileShortcuts';
 import CommunityPageHero from '../../components/CommunityPageHero';
@@ -11,6 +12,7 @@ import {
 import { Link } from 'react-router-dom';
 
 const ResidentDashboard = () => {
+  useLanguage();
   const { user } = useContext(AuthContext);
   const [residentStats, setResidentStats] = useState({ myDue: 0 });
   const [notices, setNotices] = useState([]);
@@ -45,7 +47,7 @@ const ResidentDashboard = () => {
     statusMsg: 'Sur Shakti Gardens are open'
   });
 
-  const TODAY_DATE = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const TODAY_DATE = new Date().toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
   useEffect(() => {
     if (user) {
@@ -135,7 +137,7 @@ const ResidentDashboard = () => {
   const formatDate = (dateString) => {
     if (!dateString) return "Date N/A";
     const date = new Date(dateString);
-    return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleDateString('en-GB', {
+    return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleDateString(getLocale(), {
         day: 'numeric', month: 'short', year: 'numeric'
     });
   };
@@ -150,19 +152,19 @@ const ResidentDashboard = () => {
       
       {/* Header Section */}
       <CommunityPageHero pathname="/dashboard" eyebrow={timeData.greeting}
-        title={`Welcome home, ${user?.fullName || 'Resident'}!`}
-        description={<>Row house No: <strong>{user?.flatNo || 'N/A'}</strong> · Sur Shakti Residency</>}>
-        <div className="resident-hero-clock d-none d-md-flex"><span>{TODAY_DATE}</span><time>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time></div>
+        title={uiText("Welcome home, {{v0}}!", { v0: user?.fullName || 'Resident' })}
+        description={<>{uiText("Row house No:") + ' '}<strong>{user?.flatNo || 'N/A'}</strong>{' ' + uiText("· Sur Shakti Residency")}</>}>
+        <div className="resident-hero-clock d-none d-md-flex"><span>{TODAY_DATE}</span><time>{currentTime.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time></div>
       </CommunityPageHero>
 
-      <section role="region" aria-label="Resident widgets"
+      <section role="region" aria-label={uiText("Resident widgets")}
         className="row g-3 mb-3 resident-cards resident-widget-row resident-overview">        {/* Maintenance Due Card */}
         <div className="col-12 col-lg-4">
           <div className="card border-0 shadow-sm rounded-4 h-100 p-3 balance-card">
             <div className="card-body d-flex flex-column justify-content-between p-0">
               <div>
                 <div className="d-flex justify-content-between align-items-start mb-2">
-                  <small className="text-muted fw-bold" style={{fontSize: '0.75rem'}}>MAINTENANCE DUE</small>
+                  <small className="text-muted fw-bold" style={{fontSize: '0.75rem'}}>{uiText("MAINTENANCE DUE")}</small>
                   <FaRupeeSign className="text-muted opacity-25" size={24}/>
                 </div>
                 
@@ -174,22 +176,19 @@ const ResidentDashboard = () => {
                   </h2>
                 ) : (
                   <div className="mb-4">
-                      <h2 className="fw-bold text-success display-6 mb-1">All Clear</h2>
-                      <small className="text-muted">No pending dues.</small>
+                      <h2 className="fw-bold text-success display-6 mb-1">{uiText("All Clear")}</h2>
+                      <small className="text-muted">{uiText("No pending dues.")}</small>
                   </div>
                 )}
               </div>
               
               {loading ? (
-                  <button className="btn btn-primary w-100 fw-bold py-2 rounded-3" disabled>Loading balance…</button>
+                  <button className="btn btn-primary w-100 fw-bold py-2 rounded-3" disabled>{uiText("Loading balance…")}</button>
               ) : residentStats.myDue > 0 ? (
-                  <Link to="/my-bills" className="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm text-decoration-none">
-                      Pay Now
-                  </Link>
+                  <Link to="/my-bills" className="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm text-decoration-none">{uiText("Pay Now")}</Link>
               ) : (
                   <button className="btn btn-success w-100 fw-bold py-2 rounded-3 disabled" style={{opacity: 0.8}}>
-                      <FaCheckCircle className="me-2"/> Paid
-                  </button>
+                      <FaCheckCircle className="me-2"/>{' ' + uiText("Paid")}</button>
               )}
             </div>
           </div>
@@ -199,19 +198,19 @@ const ResidentDashboard = () => {
         <div className="col-12 col-lg-4">
           <div className="card border-0 shadow-sm rounded-4 h-100 p-3 text-white quick-actions-card">
             <div className="card-body p-0">
-              <h5 className="fw-bold mb-1">Quick Actions</h5>
-              <p className="small opacity-75 mb-4">Row house No: {user?.flatNo}</p>
+              <h5 className="fw-bold mb-1">{uiText("Quick Actions")}</h5>
+              <p className="small opacity-75 mb-4">{uiText("Row house No:") + ' '}{user?.flatNo}</p>
               <div className="row g-2">
                 <div className="col-6">
                   <Link to="/complaints" className="btn w-100 h-100 py-3 rounded-3 border-0 text-white d-flex flex-column align-items-center justify-content-center" style={{backgroundColor: 'rgba(255,255,255,0.2)', textDecoration: 'none'}}>
                       <FaWrench size={20} className="mb-2"/>
-                      <span className="small fw-bold">Report</span>
+                      <span className="small fw-bold">{uiText("Report")}</span>
                   </Link>
                 </div>
                 <div className="col-6">
                     <Link to="/directory" className="btn w-100 h-100 py-3 rounded-3 border-0 text-white d-flex flex-column align-items-center justify-content-center" style={{backgroundColor: 'rgba(255,255,255,0.2)', textDecoration: 'none'}}>
                       <FaPhoneAlt size={20} className="mb-2"/>
-                      <span className="small fw-bold">Contacts</span>
+                      <span className="small fw-bold">{uiText("Contacts")}</span>
                   </Link>
                 </div>
               </div>
@@ -224,22 +223,22 @@ const ResidentDashboard = () => {
           <div className="card border-0 shadow-sm rounded-4 h-100 p-3 helpdesk-summary-card">
             <div className="card-body p-0 d-flex flex-column">
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <h5 className="fw-bold mb-0">Helpdesk Overview</h5>
+                <h5 className="fw-bold mb-0">{uiText("Helpdesk Overview")}</h5>
                 <FaWrench className="text-primary" aria-hidden="true" />
               </div>
-              <p className="text-muted small mb-3">Stay on top of your reported issues.</p>
+              <p className="text-muted small mb-3">{uiText("Stay on top of your reported issues.")}</p>
               {ticketError ? (
-                <p className="text-muted small my-auto" role="status">Ticket summary is unavailable. Open helpdesk to try again.</p>
+                <p className="text-muted small my-auto" role="status">{uiText("Ticket summary is unavailable. Open helpdesk to try again.")}</p>
               ) : tickets === null ? (
-                <p className="text-muted small my-auto" role="status">Loading tickets...</p>
+                <p className="text-muted small my-auto" role="status">{uiText("Loading tickets...")}</p>
               ) : (
                 <div className="helpdesk-summary-counts mb-3">
-                  <div><strong className="text-warning">{tickets.length - resolvedTickets}</strong><span>Pending</span></div>
-                  <div><strong className="text-success">{resolvedTickets}</strong><span>Resolved</span></div>
+                  <div><strong className="text-warning">{tickets.length - resolvedTickets}</strong><span>{uiText("Pending")}</span></div>
+                  <div><strong className="text-success">{resolvedTickets}</strong><span>{uiText("Resolved")}</span></div>
                 </div>
               )}
               <Link to="/complaints" className="btn btn-outline-primary w-100 fw-bold rounded-3 mt-auto">
-                {tickets?.length === 0 ? 'Raise a ticket' : 'View tickets'}
+                {tickets?.length === 0 ? uiText("Raise a ticket") : uiText("View tickets")}
               </Link>
             </div>
           </div>
@@ -248,8 +247,8 @@ const ResidentDashboard = () => {
       <MobileShortcuts onRefresh={() => setRefreshVersion(value => value + 1)} refreshing={loading || (tickets === null && !ticketError)} />
       {/* Latest Updates Header */}
       <div className="row mb-3 align-items-center">
-          <div className="col-6"><h5 className="fw-bold text-dark m-0"><FaBullhorn className="me-2 mobile-section-icon" aria-hidden="true" />Latest Updates</h5></div>
-          <div className="col-6 text-end"><Link to="/notices" className="text-primary fw-bold text-decoration-none small">View All</Link></div>
+          <div className="col-6"><h5 className="fw-bold text-dark m-0"><FaBullhorn className="me-2 mobile-section-icon" aria-hidden="true" />{uiText("Latest Updates")}</h5></div>
+          <div className="col-6 text-end"><Link to="/notices" className="text-primary fw-bold text-decoration-none small">{uiText("View All")}</Link></div>
       </div>
 
       {/* Updates List */}
@@ -284,16 +283,14 @@ const ResidentDashboard = () => {
                        <div className="flex-grow-1 overflow-hidden">
                           <div className="mb-1 d-flex flex-wrap gap-1 justify-content-between">
                             <div>
-                              {notice.isUrgent && <span className="badge bg-danger bg-opacity-10 text-danger me-2" style={{fontSize: '0.65rem'}}>URGENT</span>}
-                              <span className="badge bg-primary bg-opacity-10 text-primary" style={{fontSize: '0.65rem'}}>{notice.category || 'NOTICE'}</span>
+                              {notice.isUrgent && <span className="badge bg-danger bg-opacity-10 text-danger me-2" style={{fontSize: '0.65rem'}}>{uiText("URGENT")}</span>}
+                              <span className="badge bg-primary bg-opacity-10 text-primary" style={{fontSize: '0.65rem'}}>{uiText(notice.category || 'NOTICE')}</span>
                             </div>
                             <small className="text-muted" style={{fontSize: '0.7rem'}}>{formatDate(notice.postedDate || notice.createdAt)}</small>
                           </div>
                           <h6 className="fw-bold mb-1 text-truncate">{notice.title}</h6>
                           <p className="text-muted small mb-2 text-truncate">{notice.content}</p>
-                          <button className="btn btn-link p-0 text-decoration-none fw-bold" style={{fontSize: '0.8rem'}} onClick={() => setSelectedNotice(notice)}>
-                              Read More
-                          </button>
+                          <button className="btn btn-link p-0 text-decoration-none fw-bold" style={{fontSize: '0.8rem'}} onClick={() => setSelectedNotice(notice)}>{uiText("Read More")}</button>
                        </div>
                     </div>
                   </div>
@@ -302,7 +299,7 @@ const ResidentDashboard = () => {
          ) : (
            <div className="col-12 text-center p-5 text-muted border rounded-4 bg-white">
               <FaBullhorn className="mb-3 opacity-25" size={30}/>
-              <p className="mb-0">No new updates right now.</p>
+              <p className="mb-0">{uiText("No new updates right now.")}</p>
            </div>
          )}
       </div>
@@ -316,12 +313,12 @@ const ResidentDashboard = () => {
                           <FaTimes />
                       </button>
                       <h4 className="fw-bold mb-0">{selectedNotice.title}</h4>
-                      <small className="opacity-75">Posted on {formatDate(selectedNotice.postedDate || selectedNotice.createdAt)}</small>
+                      <small className="opacity-75">{uiText("Posted on") + ' '}{formatDate(selectedNotice.postedDate || selectedNotice.createdAt)}</small>
                   </div>
                   <div className="p-4">
                       <p className="text-secondary" style={{whiteSpace: 'pre-line', lineHeight: '1.6'}}>{selectedNotice.content}</p>
                       <div className="text-end mt-3 border-top pt-3">
-                          <button className="btn btn-secondary px-4 rounded-pill w-100 w-md-auto" onClick={() => setSelectedNotice(null)}>Close</button>
+                          <button className="btn btn-secondary px-4 rounded-pill w-100 w-md-auto" onClick={() => setSelectedNotice(null)}>{uiText("Close")}</button>
                       </div>
                   </div>
               </div>

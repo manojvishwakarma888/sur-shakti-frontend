@@ -1,7 +1,9 @@
+import { t as uiText, useLanguage } from './i18n/language.js';
 
 
 import React, { useState, useEffect } from 'react'; // 1. Added Hooks here
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import LanguageSwitcher from './components/LanguageSwitcher';
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -31,7 +33,13 @@ import PaymentHistory from './pages/PaymentHistory';
 import PaymentReview from './pages/PaymentReview';
 const Maintenance = React.lazy(() => import('./pages/Maintenance'));
 const Notifications = React.lazy(() => import('./pages/Notifications'));
+function PublicLanguageSwitcher() {
+  useLanguage();
+  const { pathname } = useLocation();
+  return ['/', '/login', '/register', '/reset-password', '/change-password'].includes(pathname) ? <LanguageSwitcher standalone /> : null;
+}
 function App() {
+  useLanguage();
   // 2. State to track internet connection
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -50,14 +58,13 @@ function App() {
     <ThemeProvider>
         <AuthProvider>
           <Router>
+            <PublicLanguageSwitcher />
             <ScrollToTop />
             <ToastContainer position="top-right" autoClose={3000} />
             
             {/* 4. THE OFFLINE BANNER */}
             { !isOnline && (
-                <div className="offline-banner" role="status">
-                    You’re offline. Reconnect to load updates or submit changes.
-                </div>
+                <div className="offline-banner" role="status">{uiText("You’re offline. Reconnect to load updates or submit changes.")}</div>
             )}
             
             <Routes>
@@ -76,12 +83,12 @@ function App() {
                   <Route path="/notices" element={<PrivateRoute><Notices /></PrivateRoute>} />
                   <Route path="/complaints" element={<PrivateRoute><Complaints /></PrivateRoute>} />
                   <Route path="/my-bills" element={<PrivateRoute><MyBills /></PrivateRoute>} />
-                  <Route path="/payment-history" element={<React.Suspense fallback={<p role="status">Loading payment history…</p>}><PaymentHistory /></React.Suspense>} />
-                  <Route path="/payment-review" element={<React.Suspense fallback={<p role="status">Loading payment review…</p>}><PaymentReview /></React.Suspense>} />
+                  <Route path="/payment-history" element={<React.Suspense fallback={<p role="status">{uiText("Loading payment history…")}</p>}><PaymentHistory /></React.Suspense>} />
+                  <Route path="/payment-review" element={<React.Suspense fallback={<p role="status">{uiText("Loading payment review…")}</p>}><PaymentReview /></React.Suspense>} />
                   <Route path="/directory" element={<PrivateRoute><Directory /></PrivateRoute>} />
                   <Route path="/expenses" element={<PrivateRoute><Expenses /></PrivateRoute>} />
-                  <Route path="/maintenance" element={<PrivateRoute><React.Suspense fallback={<p role="status">Loading accounts…</p>}><Maintenance /></React.Suspense></PrivateRoute>} />
-                  <Route path="/notifications" element={<PrivateRoute><React.Suspense fallback={<p role="status">Loading inbox…</p>}><Notifications /></React.Suspense></PrivateRoute>} />
+                  <Route path="/maintenance" element={<PrivateRoute><React.Suspense fallback={<p role="status">{uiText("Loading accounts…")}</p>}><Maintenance /></React.Suspense></PrivateRoute>} />
+                  <Route path="/notifications" element={<PrivateRoute><React.Suspense fallback={<p role="status">{uiText("Loading inbox…")}</p>}><Notifications /></React.Suspense></PrivateRoute>} />
                   <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
                   <Route path="/event-management" element={<PrivateRoute><EventBookingWizard /></PrivateRoute>} />
                   <Route path="/event-management/history" element={<PrivateRoute><EventBookingHistory /></PrivateRoute>} />

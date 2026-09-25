@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import MobileProfileMenu from './MobileProfileMenu';
 import BrandLogo from './BrandLogo';
 import { useState, useContext, useEffect, useRef } from 'react';
@@ -5,6 +6,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { FaChevronLeft, FaChevronRight, FaThLarge, FaFileInvoiceDollar, FaBullhorn, FaHeadset } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
+import LanguageSwitcher from './LanguageSwitcher';
 import CommunityPageHero from './CommunityPageHero';
 import './PageExperience.css';
 import './FreshExperience.css';
@@ -19,14 +21,16 @@ const destinations = [
 const titles = { '/maintenance': 'Maintenance accounts', '/notifications': 'Notifications', '/dashboard': 'Home', '/my-bills': 'Bills', '/payment-history': 'Payment history', '/payment-review': 'Payment review', '/notices': 'Notice board',
   '/complaints': 'Helpdesk', '/directory': 'Community directory', '/expenses': 'Society expenses', '/profile': 'Your profile', '/event-management': 'Event management', '/event-management/history': 'Booking history' };
 function BottomLink({ destination, onClick }) {
+  useLanguage();
   const Icon = destination.icon;
   return <NavLink to={destination.to} onClick={onClick} className={({ isActive }) => isActive ? 'active' : ''}>
     <span className="mobile-nav-icon"><Icon aria-hidden="true" /></span>
-    <span className="mobile-nav-label">{destination.label}</span>
+    <span className="mobile-nav-label">{uiText(destination.label)}</span>
   </NavLink>;
 }
 
 export default function Layout() {
+  useLanguage();
   const { user } = useContext(AuthContext);
   const { pathname } = useLocation();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -72,31 +76,32 @@ export default function Layout() {
 
   return (
     <div className={'d-flex position-relative app-shell' + (pathname.startsWith('/event-management') ? '' : ' fresh-shell') + (desktopCollapsed ? ' desktop-sidebar-collapsed' : '')}>
-      <a className="skip-link" href="#main-content">Skip to content</a>
+      <a className="skip-link" href="#main-content">{uiText("Skip to content")}</a>
       <div className={'sidebar-overlay ' + (isSidebarOpen ? 'active' : '')} aria-hidden="true" onClick={() => setSidebarOpen(false)} />
       <Sidebar isOpen={isSidebarOpen} toggle={() => setSidebarOpen(false)} />
       <div className="flex-grow-1 main-content" inert={isSidebarOpen ? true : undefined}>
         <header className="app-header">
           <button type="button" className="desktop-sidebar-toggle d-none d-md-inline-flex"
-            aria-label={desktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-controls="app-sidebar"
+            aria-label={desktopCollapsed ? uiText("Expand sidebar") : uiText("Collapse sidebar")} aria-controls="app-sidebar"
             aria-expanded={!desktopCollapsed} onClick={toggleDesktopSidebar}>
             {desktopCollapsed ? <FaChevronRight aria-hidden="true" /> : <FaChevronLeft aria-hidden="true" />}
           </button>
           <MobileProfileMenu />
           <div className="app-identity">
-          <Link to="/dashboard" className="brand-home-link" aria-label="Go to home">
+          <Link to="/dashboard" className="brand-home-link" aria-label={uiText("Go to home")}>
           <BrandLogo size={44} />
           </Link>
           <div className="app-header-title">
-            <span className="app-brand"><span>Sur Shakti</span><span className="app-brand-subtitle">Connect</span></span>
-            <span className="fw-bold">{titles[pathname] || 'Sur Shakti Connect'}</span>
+            <span className="app-brand"><span>{uiText("Sur Shakti")}</span><span className="app-brand-subtitle">{uiText("Connect")}</span></span>
+            <span className="fw-bold">{uiText(titles[pathname] || uiText("Sur Shakti Connect"))}</span>
           </div>
           </div>
-          <span className="d-none d-md-block text-muted small ms-auto">Welcome, {user?.fullName || 'Resident'}</span>
+          <span className="d-none d-md-block text-muted small ms-auto">{uiText("Welcome,") + ' '}{user?.fullName || uiText("Resident")}</span>
           <ThemeToggle />
+          <LanguageSwitcher />
         </header>
         <button ref={menuButton} type="button" className="mobile-drawer-trigger d-md-none"
-          aria-label="Open navigation" title="Open all menus" aria-controls="app-sidebar"
+          aria-label={uiText("Open navigation")} title={uiText("Open all menus")} aria-controls="app-sidebar"
           aria-expanded={isSidebarOpen} onClick={() => setSidebarOpen(true)}>
           <FaChevronLeft aria-hidden="true" />
         </button>
@@ -105,7 +110,7 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
-      <nav className="mobile-bottom-nav" aria-label="Main navigation" inert={isSidebarOpen ? true : undefined}>
+      <nav className="mobile-bottom-nav" aria-label={uiText("Main navigation")} inert={isSidebarOpen ? true : undefined}>
         {destinations.map(destination => <BottomLink key={destination.to} destination={destination} onClick={() => setSidebarOpen(false)} />)}
       </nav>
     </div>

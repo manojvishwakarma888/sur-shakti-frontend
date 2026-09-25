@@ -1,7 +1,9 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import { Link } from 'react-router-dom';
 import { FaUserPlus, FaFileInvoice, FaDownload, FaAddressBook, FaChartPie, FaBook, FaBell, FaSyncAlt } from 'react-icons/fa';
 
 export default function MobileShortcuts({ admin = false, onAddResidents, onCreateBill, onExportDues, onRefresh, refreshing = false, exportDisabled = false }) {
+  useLanguage();
   const items = admin ? [
     { label: 'Add residents', icon: FaUserPlus, tone: 'indigo', onClick: onAddResidents },
     { label: 'Create bill', icon: FaFileInvoice, tone: 'coral', onClick: onCreateBill },
@@ -12,9 +14,9 @@ export default function MobileShortcuts({ admin = false, onAddResidents, onCreat
     { to: '/profile', label: 'My profile', icon: FaBook, FaBell, tone: 'teal' },
   ];
   items.push({ label: refreshing ? 'Refreshing' : 'Refresh', icon: FaSyncAlt, tone: 'amber', onClick: onRefresh, disabled: refreshing });
-  return <nav className="mobile-shortcuts" aria-label="Dashboard shortcuts">
+  return <nav className="mobile-shortcuts" aria-label={uiText("Dashboard shortcuts")}>
     {items.map(({ to, label, icon: Icon, tone, onClick, disabled }) => {
-      const content = <><span className={'shortcut-icon tone-' + tone}><Icon aria-hidden="true" /></span><span>{label}</span></>;
+      const content = <><span className={'shortcut-icon tone-' + tone}><Icon aria-hidden="true" /></span><span>{uiText(label)}</span></>;
       return to ? <Link key={tone} to={to}>{content}</Link> :
         <button key={tone} type="button" onClick={onClick} disabled={disabled}>{content}</button>;
     })}

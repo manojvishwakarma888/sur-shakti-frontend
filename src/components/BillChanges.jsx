@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import { useEffect, useState } from 'react';
 import api, { getApiErrorMessage } from '../services/api';
 import { flatPath, money, newKey, noRetry } from '../services/maintenance';
@@ -5,6 +6,7 @@ import { billPayableAmount } from '../utils/billing';
 import { Field, ErrorMessage } from './MaintenanceUI';
 
 export default function BillChanges({ flatNo, pending = [], onSaved }) {
+  useLanguage();
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState(0);
@@ -41,22 +43,22 @@ export default function BillChanges({ flatNo, pending = [], onSaved }) {
     } catch (err) { setError(getApiErrorMessage(err)); } finally { setBusy(false); }
   };
   return <section className="border-top pt-3 mt-3">
-    <h4 className="h6">Give credit or add a charge</h4>
-    <p className="small text-muted">Choose a bill. A credit reduces what the resident owes; an extra charge increases it. This does not record a payment or spending.</p>
+    <h4 className="h6">{uiText("Give credit or add a charge")}</h4>
+    <p className="small text-muted">{uiText("Choose a bill. A credit reduces what the resident owes; an extra charge increases it. This does not record a payment or spending.")}</p>
     <ErrorMessage error={error} />
-    {loading && <p role="status">Loading bills…</p>}
-    {error && !loading && <button className="btn btn-outline-secondary mb-3" onClick={() => { setLoading(true); setError(''); setVersion(value => value + 1); }}>Reload bills</button>}
-    {!loading && !error && !bills.length && <p>No unpaid bills for this row house. Create a bill before giving credit or adding a charge.</p>}
+    {loading && <p role="status">{uiText("Loading bills…")}</p>}
+    {error && !loading && <button className="btn btn-outline-secondary mb-3" onClick={() => { setLoading(true); setError(''); setVersion(value => value + 1); }}>{uiText("Reload bills")}</button>}
+    {!loading && !error && !bills.length && <p>{uiText("No unpaid bills for this row house. Create a bill before giving credit or adding a charge.")}</p>}
     <form onSubmit={event => save(event)}><fieldset disabled={loading || busy || !bills.length}>
-      <Field label="Choose bill"><select className="form-select" required value={form.billId} onChange={event => change({ billId: event.target.value })}><option value="">Select a bill</option>{bills.map(bill => <option key={bill.billId} value={bill.billId}>Bill #{bill.billId} · {bill.month} · {bill.billType} · Due {money(billPayableAmount(bill))}</option>)}</select></Field>
+      <Field label={uiText("Choose bill")}><select className="form-select" required value={form.billId} onChange={event => change({ billId: event.target.value })}><option value="">{uiText("Select a bill")}</option>{bills.map(bill => <option key={bill.billId} value={bill.billId}>{uiText("Bill #")}{bill.billId} · {bill.month} · {bill.billType}{' ' + uiText("· Due") + ' '}{money(billPayableAmount(bill))}</option>)}</select></Field>
       <div className="maintenance-form-grid mt-3">
-        <Field label="What would you like to do?"><select className="form-select" value={form.type} onChange={event => change({ type: event.target.value })}><option value="credit">Give credit (reduce amount due)</option><option value="charge">Add an extra charge</option></select></Field>
-        <Field label="Amount (₹)"><input className="form-control" type="number" min="0.01" step="0.01" required value={form.amount} onChange={event => change({ amount: event.target.value })} /></Field>
-        <Field label="Reason for this change"><input className="form-control" required maxLength={500} value={form.reason} onChange={event => change({ reason: event.target.value })} placeholder="e.g. Correcting an extra charge" /></Field>
+        <Field label={uiText("What would you like to do?")}><select className="form-select" value={form.type} onChange={event => change({ type: event.target.value })}><option value="credit">{uiText("Give credit (reduce amount due)")}</option><option value="charge">{uiText("Add an extra charge")}</option></select></Field>
+        <Field label={uiText("Amount (₹)")}><input className="form-control" type="number" min="0.01" step="0.01" required value={form.amount} onChange={event => change({ amount: event.target.value })} /></Field>
+        <Field label={uiText("Reason for this change")}><input className="form-control" required maxLength={500} value={form.reason} onChange={event => change({ reason: event.target.value })} placeholder={uiText("e.g. Correcting an extra charge")} /></Field>
       </div>
-      {selected && amount > 0 && <p className={"mt-3 rounded-3 p-2 " + (form.type === "credit" ? "ledger-credit" : "ledger-debit")} role="status">Current amount due: {money(currentDue)} · New amount due: {money(currentDue + signed)}</p>}
-      <button className="btn btn-primary mt-3">{busy ? 'Saving…' : form.type === 'credit' ? 'Give credit' : 'Add extra charge'}</button>
+      {selected && amount > 0 && <p className={"mt-3 rounded-3 p-2 " + (form.type === "credit" ? "ledger-credit" : "ledger-debit")} role="status">{uiText("Current amount due:") + ' '}{money(currentDue)}{' ' + uiText("· New amount due:") + ' '}{money(currentDue + signed)}</p>}
+      <button className="btn btn-primary mt-3">{busy ? uiText("Saving…") : form.type === 'credit' ? uiText("Give credit") : uiText("Add extra charge")}</button>
     </fieldset></form>
-    {pending.length > 0 && <section className="alert alert-warning mt-3"><h5 className="h6">Earlier entries need a bill</h5><p className="small">These entries already affect the account statement. Choose a bill above and link each entry to update its amount due too. This will not add it to the statement again.</p>{pending.map(entry => <div key={entry.id} className="border-top py-2"><p>{entry.amount < 0 ? 'Credit' : 'Extra charge'}: {money(Math.abs(entry.amount))} · {entry.reason}</p><button type="button" className="btn btn-outline-primary" disabled={busy || !selected} onClick={() => save(null, entry)}>Apply to selected bill</button></div>)}</section>}
+    {pending.length > 0 && <section className="alert alert-warning mt-3"><h5 className="h6">{uiText("Earlier entries need a bill")}</h5><p className="small">{uiText("These entries already affect the account statement. Choose a bill above and link each entry to update its amount due too. This will not add it to the statement again.")}</p>{pending.map(entry => <div key={entry.id} className="border-top py-2"><p>{entry.amount < 0 ? uiText("Credit") : uiText("Extra charge")}: {money(Math.abs(entry.amount))} · {entry.reason}</p><button type="button" className="btn btn-outline-primary" disabled={busy || !selected} onClick={() => save(null, entry)}>{uiText("Apply to selected bill")}</button></div>)}</section>}
   </section>;
 }

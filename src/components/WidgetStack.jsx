@@ -1,7 +1,9 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import { useRef, useState } from 'react';
 import { FaHandPointUp } from 'react-icons/fa';
 
 export default function WidgetStack({ children, labels, label, className = '' }) {
+  useLanguage();
   const row = useRef(null);
   const [active, setActive] = useState(0);
   const select = (index) => {
@@ -18,7 +20,7 @@ export default function WidgetStack({ children, labels, label, className = '' })
     setActive(offsets.indexOf(Math.min(...offsets)));
   };
   return <div className="widget-stack">
-    <div ref={row} className={'widget-stack-track ' + className} role="region" aria-label={label}
+    <div ref={row} className={'widget-stack-track ' + className} role="region" aria-label={uiText(label)}
       tabIndex={0} onScroll={sync} onKeyDown={event => {
         if (event.target !== event.currentTarget || window.innerWidth >= 768) return;
         if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
@@ -29,10 +31,10 @@ export default function WidgetStack({ children, labels, label, className = '' })
       }}>
       {children}
     </div>
-    <div className="resident-widget-navigation" aria-label="Choose dashboard widget">
-      <span className="small text-muted"><FaHandPointUp aria-hidden="true" /> Swipe</span>
+    <div className="resident-widget-navigation" aria-label={uiText("Choose dashboard widget")}>
+      <span className="small text-muted"><FaHandPointUp aria-hidden="true" />{' ' + uiText("Swipe")}</span>
       <div className="d-flex">{labels.map((name, index) =>
-        <button key={name} type="button" className="resident-widget-dot" aria-label={name}
+        <button key={name} type="button" className="resident-widget-dot" aria-label={uiText(name)}
           aria-current={active === index ? 'true' : undefined} onClick={() => select(index)}><span /></button>
       )}</div>
       <span className="small text-muted" aria-live="polite">{active + 1} / {labels.length}</span>

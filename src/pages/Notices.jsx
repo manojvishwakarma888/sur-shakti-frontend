@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage, getLocale } from '../i18n/language.js';
 import React, { useEffect, useState, useContext } from 'react';
 import api from '../services/api';
 // import Sidebar from '../components/Sidebar'; 
@@ -8,6 +9,7 @@ import ExpandableText from '../components/ExpandableText';
 import CommunityPageHero from '../components/CommunityPageHero';
 
 const Notices = () => {
+  useLanguage();
   const { user } = useContext(AuthContext); 
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,41 +84,40 @@ const Notices = () => {
       if (isEditing) {
         // UPDATE Request (PUT)
         await api.put(`/notice/${currentId}`, formData);
-        toast.success("Notice Updated Successfully!");
+        toast.success(uiText("Notice Updated Successfully!"));
       } else {
         // CREATE Request (POST)
         await api.post('/notice', formData);
-        toast.success("Notice Posted Successfully!");
+        toast.success(uiText("Notice Posted Successfully!"));
       }
 
       setShowModal(false); 
       fetchNotices(); // Refresh List
     } catch (err) {
       console.error(err);
-      toast.error(isEditing ? "Failed to update notice." : "Failed to post notice.");
+      toast.error(isEditing ? uiText("Failed to update notice.") : uiText("Failed to post notice."));
     }
   };
 
   // --- 4. DELETE ---
   const handleDelete = async (id) => {
-    if(!window.confirm("Are you sure you want to remove this notice?")) return;
+    if(!window.confirm(uiText("Are you sure you want to remove this notice?"))) return;
     try {
       await api.delete(`/notice/${id}`);
-      toast.success("Notice Deleted");
+      toast.success(uiText("Notice Deleted"));
       fetchNotices();
     } catch (err) {
-      toast.error("Could not delete notice");
+      toast.error(uiText("Could not delete notice"));
     }
   };
 
   return (
     <div className="notices-screen">
-        <CommunityPageHero pathname="/notices" title="Notice Board">
+        <CommunityPageHero pathname="/notices" title={uiText("Notice Board")}>
           
           {user?.role === 'Admin' && (
             <button className="btn btn-primary fw-bold shadow-sm" onClick={handleOpenCreate}>
-              <FaPlus className="me-2" /> Post New Notice
-            </button>
+              <FaPlus className="me-2" />{' ' + uiText("Post New Notice")}</button>
           )}
         </CommunityPageHero>
 
@@ -149,7 +150,7 @@ const Notices = () => {
                     <h5 className="card-title fw-bold text-dark mb-1">
                         {notice.title}
                         {notice.isUrgent && (
-                            <span className="badge bg-danger ms-2" style={{fontSize: '0.65rem', verticalAlign: 'middle'}}>URGENT</span>
+                            <span className="badge bg-danger ms-2" style={{fontSize: '0.65rem', verticalAlign: 'middle'}}>{uiText("URGENT")}</span>
                         )}
                     </h5>
                     
@@ -160,7 +161,7 @@ const Notices = () => {
                         <button 
                             className="btn btn-sm btn-outline-secondary border-0 rounded-circle"
                             onClick={() => handleOpenEdit(notice)}
-                            title="Edit Notice"
+                            title={uiText("Edit Notice")}
                         >
                             <FaPen size={14} />
                         </button>
@@ -168,7 +169,7 @@ const Notices = () => {
                         <button 
                             className="btn btn-sm btn-outline-danger border-0 rounded-circle" 
                             onClick={() => handleDelete(notice.id || notice.noticeId)}
-                            title="Delete Notice"
+                            title={uiText("Delete Notice")}
                         >
                             <FaTrash size={14} />
                         </button>
@@ -177,14 +178,14 @@ const Notices = () => {
                   </div>
                   
                   <h6 className="card-subtitle mb-3 text-muted small mt-1">
-                    <span className="badge bg-light text-secondary border me-2">{notice.category}</span>
-                    <FaCalendarAlt className="me-1" /> Expires: {new Date(notice.expiryDate).toLocaleDateString()}
+                    <span className="badge bg-light text-secondary border me-2">{uiText(notice.category)}</span>
+                    <FaCalendarAlt className="me-1" />{' ' + uiText("Expires:") + ' '}{new Date(notice.expiryDate).toLocaleDateString(getLocale())}
                   </h6>
                   
                   <ExpandableText key={notice.content} text={notice.content} />
                 </div>
                 <div className="card-footer bg-transparent border-0 text-end pt-0">
-                    <small className="text-muted fst-italic" style={{fontSize: '0.75rem'}}>Posted by Secretary</small>
+                    <small className="text-muted fst-italic" style={{fontSize: '0.75rem'}}>{uiText("Posted by Secretary")}</small>
                 </div>
               </div>
             </div>
@@ -194,8 +195,8 @@ const Notices = () => {
             <div className="col-12">
               <div className="empty-state">
                 <FaBullhorn size={28} className="text-primary" />
-                <h3 className="h5 mt-3">You’re all caught up</h3>
-                <p>No active notices right now.</p>
+                <h3 className="h5 mt-3">{uiText("You’re all caught up")}</h3>
+                <p>{uiText("No active notices right now.")}</p>
               </div>
             </div>
           )}
@@ -208,7 +209,7 @@ const Notices = () => {
               <div className="modal-content shadow-lg border-0">
                 <div className="modal-header justify-content-between">
                   <h5 className="modal-title fw-bold">
-                      {isEditing ? "Edit Notice" : "Post New Notice"}
+                      {isEditing ? uiText("Edit Notice") : uiText("Post New Notice")}
                   </h5>
                   <button type="button" className="btn btn-light rounded-circle btn-sm p-2" onClick={() => setShowModal(false)}>
                       <FaTimes />
@@ -217,32 +218,32 @@ const Notices = () => {
                 <div className="modal-body p-4">
                   <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                      <label className="form-label small fw-bold text-muted">TITLE</label>
+                      <label className="form-label small fw-bold text-muted">{uiText("TITLE")}</label>
                       <input type="text" className="form-control" required 
                              value={formData.title} 
                              onChange={e => setFormData({...formData, title: e.target.value})} />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label small fw-bold text-muted">CONTENT / DETAILS</label>
+                      <label className="form-label small fw-bold text-muted">{uiText("CONTENT / DETAILS")}</label>
                       <textarea className="form-control" rows="4" required 
                                 value={formData.content} 
                                 onChange={e => setFormData({...formData, content: e.target.value})}></textarea>
                     </div>
                     <div className="row g-3 mb-3">
                         <div className="col-12 col-md-6">
-                            <label className="form-label small fw-bold text-muted">CATEGORY</label>
+                            <label className="form-label small fw-bold text-muted">{uiText("CATEGORY")}</label>
                             <select className="form-select" required 
                                 value={formData.category} 
                                 onChange={e => setFormData({...formData, category: e.target.value})}>
-                                <option value="">Select...</option>
-                                <option value="General">General</option>
-                                <option value="Event">Event</option>
-                                <option value="Maintenance">Maintenance</option>
-                                <option value="Alert">Alert</option>
+                                <option value="">{uiText("Select...")}</option>
+                                <option value="General">{uiText("General")}</option>
+                                <option value="Event">{uiText("Event")}</option>
+                                <option value="Maintenance">{uiText("Maintenance")}</option>
+                                <option value="Alert">{uiText("Alert")}</option>
                             </select>
                         </div>
                         <div className="col-12 col-md-6">
-                            <label className="form-label small fw-bold text-muted">EXPIRY DATE</label>
+                            <label className="form-label small fw-bold text-muted">{uiText("EXPIRY DATE")}</label>
                             <input type="date" className="form-control" required 
                                    value={formData.expiryDate} 
                                    onChange={e => setFormData({...formData, expiryDate: e.target.value})} />
@@ -257,14 +258,12 @@ const Notices = () => {
                         checked={formData.isUrgent}
                         onChange={(e) => setFormData({...formData, isUrgent: e.target.checked})} 
                       />
-                      <label className="form-check-label fw-bold text-danger ms-2" htmlFor="urgentCheck">
-                        Mark as Urgent Notice?
-                      </label>
+                      <label className="form-check-label fw-bold text-danger ms-2" htmlFor="urgentCheck">{uiText("Mark as Urgent Notice?")}</label>
                     </div>
                     
                     <div className="d-grid">
                       <button type="submit" className="btn btn-primary fw-bold py-2">
-                          {isEditing ? "Update Notice" : "Publish Notice"}
+                          {isEditing ? uiText("Update Notice") : uiText("Publish Notice")}
                       </button>
                     </div>
                   </form>

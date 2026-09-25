@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import BrandLogo from '../components/BrandLogo';
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +9,7 @@ import { FaLock } from 'react-icons/fa';
 import { markPasswordUpdatedNow } from '../utils/passwordPolicy';
 
 const ChangePassword = () => {
+  useLanguage();
     const { user } = useContext(AuthContext);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -18,10 +20,10 @@ const ChangePassword = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (newPassword !== confirmPassword) {
-            return toast.error("Confirm password does not match new password.");
+            return toast.error(uiText("Confirm password does not match new password."));
         }
         if (newPassword.length < 6) {
-            return toast.error("New password must be at least 6 characters long.");
+            return toast.error(uiText("New password must be at least 6 characters long."));
         }
 
         setLoading(true);
@@ -31,11 +33,11 @@ const ChangePassword = () => {
                 newPassword
             });
             markPasswordUpdatedNow(user?.email);
-            toast.success("Password updated successfully!");
+            toast.success(uiText("Password updated successfully!"));
             navigate('/dashboard');
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data || "Failed to change password. Please verify current password.");
+            toast.error(err.response?.data || uiText("Failed to change password. Please verify current password."));
         } finally {
             setLoading(false);
         }
@@ -47,20 +49,20 @@ const ChangePassword = () => {
                 
                 <div className="text-center mb-4">
                     <BrandLogo size={128} className="mb-2" />
-                    <h4 className="fw-bold text-dark mb-1">Update Password</h4>
-                    <p className="text-muted small mb-0">Please refresh your password. This reminder appears every 30 days.</p>
+                    <h4 className="fw-bold text-dark mb-1">{uiText("Update Password")}</h4>
+                    <p className="text-muted small mb-0">{uiText("Please refresh your password. This reminder appears every 30 days.")}</p>
                 </div>
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                        <label className="form-label fw-bold small text-muted">CURRENT PASSWORD</label>
+                        <label className="form-label fw-bold small text-muted">{uiText("CURRENT PASSWORD")}</label>
                         <div className="input-group border rounded-3 px-3 py-2 bg-light bg-opacity-50">
                             <FaLock className="text-muted me-2 mt-1" />
                             <input 
                                 type="password" 
                                 className="form-control border-0 bg-transparent shadow-none" 
                                 required
-                                placeholder="Enter current password"
+                                placeholder={uiText("Enter current password")}
                                 value={currentPassword} 
                                 onChange={e => setCurrentPassword(e.target.value)} 
                             />
@@ -68,14 +70,14 @@ const ChangePassword = () => {
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label fw-bold small text-muted">NEW PASSWORD</label>
+                        <label className="form-label fw-bold small text-muted">{uiText("NEW PASSWORD")}</label>
                         <div className="input-group border rounded-3 px-3 py-2 bg-light bg-opacity-50">
                             <FaLock className="text-muted me-2 mt-1" />
                             <input 
                                 type="password" 
                                 className="form-control border-0 bg-transparent shadow-none" 
                                 required
-                                placeholder="Enter new password"
+                                placeholder={uiText("Enter new password")}
                                 minLength={6}
                                 value={newPassword} 
                                 onChange={e => setNewPassword(e.target.value)} 
@@ -84,14 +86,14 @@ const ChangePassword = () => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="form-label fw-bold small text-muted">CONFIRM NEW PASSWORD</label>
+                        <label className="form-label fw-bold small text-muted">{uiText("CONFIRM NEW PASSWORD")}</label>
                         <div className="input-group border rounded-3 px-3 py-2 bg-light bg-opacity-50">
                             <FaLock className="text-muted me-2 mt-1" />
                             <input 
                                 type="password" 
                                 className="form-control border-0 bg-transparent shadow-none" 
                                 required
-                                placeholder="Confirm new password"
+                                placeholder={uiText("Confirm new password")}
                                 value={confirmPassword} 
                                 onChange={e => setConfirmPassword(e.target.value)} 
                             />
@@ -99,7 +101,7 @@ const ChangePassword = () => {
                     </div>
 
                     <button className="btn btn-primary w-100 fw-bold py-2.5 rounded-3 shadow-sm" disabled={loading}>
-                        {loading ? 'Updating...' : 'Update & Continue'}
+                        {loading ? uiText("Updating...") : uiText("Update & Continue")}
                     </button>
                 </form>
             </div>

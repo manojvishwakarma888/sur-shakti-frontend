@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage, getLocale } from '../i18n/language.js';
 import React, { useEffect, useState, useContext } from 'react';
 import api from '../services/api';
 import Sidebar from '../components/Sidebar';
@@ -7,6 +8,7 @@ import { toast } from 'react-toastify';
 import CommunityPageHero from '../components/CommunityPageHero';
 
 const Complaints = () => {
+  useLanguage();
   const { user } = useContext(AuthContext); 
   const [complaints, setComplaints] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -33,7 +35,7 @@ const Complaints = () => {
       setComplaints(res.data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load complaints");
+      toast.error(uiText("Failed to load complaints"));
     }
   };
 
@@ -47,19 +49,19 @@ const Complaints = () => {
         category: category // Sending 'Category' as required by your Controller
       });
       
-      toast.success("Ticket Raised Successfully!");
+      toast.success(uiText("Ticket Raised Successfully!"));
       setShowModal(false); 
       fetchComplaints(); 
       setTitle(""); setDescription(""); setCategory("Maintenance");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to raise ticket.");
+      toast.error(uiText("Failed to raise ticket."));
     }
   };
 
   // 3. Handle Status Update (Matches UpdateComplaintStatusDto)
   const handleStatusUpdate = async (id, newStatus) => {
-    const remark = window.prompt("Enter Resolution Remark (Optional):", "Issue Resolved");
+    const remark = window.prompt(uiText("Enter Resolution Remark (Optional):"), "Issue Resolved");
     if (remark === null) return; // User cancelled
 
     try {
@@ -69,32 +71,31 @@ const Complaints = () => {
         resolutionRemark: remark
       });
       
-      toast.success(`Ticket marked as ${newStatus}`);
+      toast.success(uiText("Ticket marked as {{v0}}", { v0: newStatus }));
       fetchComplaints();
     } catch (err) {
       console.error(err);
-      toast.error("Could not update status.");
+      toast.error(uiText("Could not update status."));
     }
   };
 
   // Helper for Status Badge
   const getStatusBadge = (status) => {
-    if(status === 'Resolved' || status === 'Closed') return <span className="badge bg-success">Resolved</span>;
-    return <span className="badge bg-warning text-dark">Pending</span>;
+    if(status === 'Resolved' || status === 'Closed') return <span className="badge bg-success">{uiText("Resolved")}</span>;
+    return <span className="badge bg-warning text-dark">{uiText("Pending")}</span>;
   };
 
   return (
     <div className="helpdesk-screen">
-        <CommunityPageHero pathname="/complaints" title="Helpdesk Tickets">
+        <CommunityPageHero pathname="/complaints" title={uiText("Helpdesk Tickets")}>
           
           {/* Only show 'Raise Ticket' if NOT admin (usually), or both can raise */}
           <button className="btn btn-danger" onClick={() => setShowModal(true)}>
-            <FaPlus className="me-2" /> Raise Ticket
-          </button>
+            <FaPlus className="me-2" />{' ' + uiText("Raise Ticket")}</button>
         </CommunityPageHero>
 
-        <div className="ticket-filter-bar" role="group" aria-label="Filter helpdesk tickets">
-          {['All', 'Pending', 'Resolved'].map(filter => <button key={filter} type="button" aria-pressed={ticketFilter === filter} onClick={() => setTicketFilter(filter)}>{filter}<span>{filter === 'All' ? complaints.length : filter === 'Resolved' ? resolvedCount : complaints.length - resolvedCount}</span></button>)}
+        <div className="ticket-filter-bar" role="group" aria-label={uiText("Filter helpdesk tickets")}>
+          {['All', 'Pending', 'Resolved'].map(filter => <button key={filter} type="button" aria-pressed={ticketFilter === filter} onClick={() => setTicketFilter(filter)}>{uiText(filter)}<span>{filter === 'All' ? complaints.length : filter === 'Resolved' ? resolvedCount : complaints.length - resolvedCount}</span></button>)}
         </div>
         <div className="row g-4">
           {visibleComplaints.map((item) => (
@@ -109,19 +110,19 @@ const Complaints = () => {
                       <h5 className="fw-bold mb-1">
                         {item.title || item.Title}
                         <span className="badge bg-secondary ms-2" style={{fontSize: '0.7rem'}}>
-                           {item.category || item.Category}
+                           {uiText(item.category || item.Category)}
                         </span>
                       </h5>
                       <p className="text-muted mb-2">{item.description || item.Description}</p>
                       
                       {/* Meta Info */}
                       <div className="d-flex gap-3 small text-muted">
-                        <span><FaClock className="me-1"/> {new Date(item.createdAt || item.CreatedAt).toLocaleDateString()}</span>
+                        <span><FaClock className="me-1"/> {new Date(item.createdAt || item.CreatedAt).toLocaleDateString(getLocale())}</span>
                         
                         {/* Admin View: Show who raised it */}
                         {(item.raisedBy || item.RaisedBy) && (
                           <span className="text-primary fw-bold">
-                            <FaUser className="me-1"/> {item.raisedBy} (Row house {item.flatNo})
+                            <FaUser className="me-1"/> {item.raisedBy}{' ' + uiText("(Row house") + ' '}{item.flatNo})
                           </span>
                         )}
                       </div>
@@ -133,7 +134,7 @@ const Complaints = () => {
                             {/* Step 1: Raised */}
                             <div className="d-flex flex-column align-items-center position-relative" style={{ zIndex: 2 }}>
                                <div className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style={{ width: '22px', height: '22px', fontSize: '0.7rem' }}>✓</div>
-                               <small className="fw-bold mt-1 text-dark" style={{ fontSize: '0.65rem' }}>Raised</small>
+                               <small className="fw-bold mt-1 text-dark" style={{ fontSize: '0.65rem' }}>{uiText("Raised")}</small>
                             </div>
                             
                             {/* Line 1 */}
@@ -144,7 +145,7 @@ const Complaints = () => {
                                <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm ${item.status === 'Resolved' || item.status === 'Closed' ? 'bg-success text-white' : 'bg-warning text-dark animate-pulse-warning'}`} style={{ width: '22px', height: '22px', fontSize: '0.7rem' }}>
                                   {item.status === 'Resolved' || item.status === 'Closed' ? '✓' : '2'}
                                </div>
-                               <small className="fw-bold mt-1 text-dark" style={{ fontSize: '0.65rem' }}>In Review</small>
+                               <small className="fw-bold mt-1 text-dark" style={{ fontSize: '0.65rem' }}>{uiText("In Review")}</small>
                             </div>
                             
                             {/* Line 2 */}
@@ -155,7 +156,7 @@ const Complaints = () => {
                                <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm ${item.status === 'Resolved' || item.status === 'Closed' ? 'bg-success text-white' : 'bg-light text-muted border'}`} style={{ width: '22px', height: '22px', fontSize: '0.7rem' }}>
                                   {item.status === 'Resolved' || item.status === 'Closed' ? '✓' : '3'}
                                </div>
-                               <small className="fw-bold mt-1 text-dark" style={{ fontSize: '0.65rem' }}>Resolved</small>
+                               <small className="fw-bold mt-1 text-dark" style={{ fontSize: '0.65rem' }}>{uiText("Resolved")}</small>
                             </div>
                             
                          </div>
@@ -164,7 +165,7 @@ const Complaints = () => {
                       {/* Show Resolution Remark if resolved */}
                       {(item.resolutionRemark || item.ResolutionRemark) && (
                          <div className="alert alert-success py-1 px-2 mt-2 d-inline-block small mb-0">
-                           <strong>Resolution:</strong> {item.resolutionRemark || item.ResolutionRemark}
+                           <strong>{uiText("Resolution:")}</strong> {item.resolutionRemark || item.ResolutionRemark}
                          </div>
                       )}
                     </div>
@@ -180,8 +181,7 @@ const Complaints = () => {
                           // FIX 2: Pass 'TicketId' to function
                           onClick={() => handleStatusUpdate(item.ticketId || item.TicketId, "Resolved")}
                         >
-                          <FaCheckCircle className="me-1"/> Mark Resolved
-                        </button>
+                          <FaCheckCircle className="me-1"/>{' ' + uiText("Mark Resolved")}</button>
                       )}
                     </div>
                   </div>
@@ -193,8 +193,8 @@ const Complaints = () => {
           {visibleComplaints.length === 0 && (
             <div className="empty-state mt-3">
               <FaCheckCircle size={28} className="text-success" />
-              <h3 className="h5 mt-3">{ticketFilter === 'All' ? 'No helpdesk tickets' : `No ${ticketFilter.toLowerCase()} tickets`}</h3>
-              <p>{ticketFilter === 'All' ? 'Your reported issues and their progress will appear here.' : 'Choose All to see your other tickets.'}</p>
+              <h3 className="h5 mt-3">{ticketFilter === 'All' ? uiText("No helpdesk tickets") : uiText("No {{v0}} tickets", { v0: ticketFilter.toLowerCase() })}</h3>
+              <p>{ticketFilter === 'All' ? uiText("Your reported issues and their progress will appear here.") : uiText("Choose All to see your other tickets.")}</p>
             </div>
           )}
         </div>
@@ -205,33 +205,33 @@ const Complaints = () => {
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">Raise New Ticket</h5>
+                  <h5 className="modal-title">{uiText("Raise New Ticket")}</h5>
                   <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
                 </div>
                 <div className="modal-body">
                   <form onSubmit={handleCreate}>
                     <div className="mb-3">
-                      <label className="form-label">Category</label>
+                      <label className="form-label">{uiText("Category")}</label>
                       <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
-                        <option value="Maintenance">Maintenance</option>
-                        <option value="Electrical">Electrical</option>
-                        <option value="Plumbing">Plumbing</option>
-                        <option value="Security">Security</option>
-                        <option value="Other">Other</option>
+                        <option value="Maintenance">{uiText("Maintenance")}</option>
+                        <option value="Electrical">{uiText("Electrical")}</option>
+                        <option value="Plumbing">{uiText("Plumbing")}</option>
+                        <option value="Security">{uiText("Security")}</option>
+                        <option value="Other">{uiText("Other")}</option>
                       </select>
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Title</label>
+                      <label className="form-label">{uiText("Title")}</label>
                       <input type="text" className="form-control" required 
                              value={title} onChange={e => setTitle(e.target.value)} />
                     </div>
                     <div className="mb-3">
-                      <label className="form-label">Description</label>
+                      <label className="form-label">{uiText("Description")}</label>
                       <textarea className="form-control" rows="3" required 
                                 value={description} onChange={e => setDescription(e.target.value)}></textarea>
                     </div>
                     <div className="d-grid">
-                      <button type="submit" className="btn btn-danger">Submit Ticket</button>
+                      <button type="submit" className="btn btn-danger">{uiText("Submit Ticket")}</button>
                     </div>
                   </form>
                 </div>

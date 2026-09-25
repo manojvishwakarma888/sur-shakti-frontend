@@ -1,0 +1,21 @@
+.language-switcher{position:relative;display:inline-flex;flex-shrink:0;z-index:1050}
+.language-trigger{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:60px;height:44px;border:1px solid var(--border-color,#dbe5df);border-radius:14px;background:var(--card-bg,#fff);color:var(--text-primary,#19392e);transition:background-color .15s ease,box-shadow .15s ease}
+.language-trigger:hover,.language-trigger[aria-expanded="true"]{box-shadow:0 0 0 3px #478e6b22}
+.language-switcher svg{font-size:18px}
+.language-code{font-size:.67rem;font-weight:700}
+.language-trigger:focus-visible,.language-panel button:focus-visible{outline:3px solid #438568;outline-offset:2px}
+.language-panel{position:absolute;right:0;top:calc(100% + 10px);width:260px;max-width:calc(100vw - 32px);padding:12px;border:1px solid var(--border-color,#dbe5df);border-radius:20px;background:var(--card-bg,#fff);color:var(--text-primary,#19392e);box-shadow:0 12px 36px #10281c26;animation:language-menu-in .15s ease-out;transform-origin:top right}
+.language-panel-title{font-size:.85rem;font-weight:700;margin:4px 8px 10px}
+.language-panel button{width:100%;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:10px 12px;border:0;border-radius:12px;background:transparent;color:inherit;font-size:1rem;text-align:left}
+.language-panel button>span{flex:1;text-align:start}
+.language-panel button>svg{flex-shrink:0;margin-inline-start:12px}
+.language-panel button:hover{background:#43856818}
+.language-panel button[aria-checked="true"]{background:#43856822;font-weight:700}
+.language-panel-hint{font-size:.73rem;color:var(--text-secondary,#586960);margin:12px 8px 4px;line-height:1.5}
+@keyframes language-menu-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.language-panel{animation:none}.language-trigger{transition:none}}
+.language-switcher-standalone{position:fixed;right:max(16px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));z-index:1050;box-shadow:0 3px 12px #00000012}
+html:not([lang="en"]) body{font-family:"Nirmala UI","Noto Sans Devanagari","Noto Sans Gujarati",system-ui,sans-serif}
+html:not([lang="en"]) :is(.community-hero-copy h1,.event-hero h1){letter-spacing:normal;line-height:1.4}
+html:not([lang="en"]) :is(.mobile-nav-label,.shortcut-label){line-height:1.5}
+@media(max-width:767.98px){.app-header .language-trigger{min-width:48px;gap:3px}.app-header .language-switcher svg{font-size:16px}.app-header .language-code{font-size:.6rem}.app-header .app-identity{flex:1;min-width:0}}

@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import {
   FaBell, FaBookOpen, FaBullhorn, FaChartPie, FaClipboardCheck,
   FaCreditCard, FaFileInvoiceDollar, FaHeadset, FaHome, FaReceipt,
@@ -20,13 +21,14 @@ const pages = {
 };
 
 export default function CommunityPageHero({ pathname, title, description, eyebrow, children }) {
+  useLanguage();
   const page = pages[pathname];
   if (!page) return null;
   const Icon = page.icon;
   const compact = ['/my-bills', '/payment-history', '/payment-review', '/maintenance', '/expenses'].includes(pathname);
   if (compact) return null;
-  return <section className={`community-page-hero tone-${page.tone}`} aria-label={`${page.title} introduction`}>
-    <div className="community-hero-copy"><span className="community-hero-eyebrow"><FaBookOpen aria-hidden="true" /> {eyebrow || page.eyebrow}</span><h1>{title || page.title}</h1><p>{description || page.description}</p>{children}</div>
+  return <section className={`community-page-hero tone-${page.tone}`} aria-label={uiText("{{v0}} introduction", { v0: uiText(page.title) })}>
+    <div className="community-hero-copy"><span className="community-hero-eyebrow"><FaBookOpen aria-hidden="true" /> {uiText(eyebrow || page.eyebrow)}</span><h1>{uiText(title || page.title)}</h1><p>{uiText(description || page.description)}</p>{children}</div>
     <div className="community-hero-art" aria-hidden="true"><span className="community-hero-sun" /><span className="community-hero-cloud cloud-a" /><span className="community-hero-cloud cloud-b" /><span className="community-hero-ground" /><span className="community-hero-house house-a" /><span className="community-hero-house house-b" /><FaTree className="community-hero-tree tree-a" /><FaTree className="community-hero-tree tree-b" /><span className="community-hero-feature"><Icon /></span><FaCreditCard className="community-hero-spark spark-a" /><FaBookOpen className="community-hero-spark spark-b" /></div>
   </section>;
 }

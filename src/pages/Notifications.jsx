@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage, getLocale } from '../i18n/language.js';
 import { useEffect, useRef, useState } from 'react';
 import api, { getApiErrorMessage } from '../services/api';
 import { listPage, noRetry } from '../services/maintenance';
@@ -5,6 +6,7 @@ import { ErrorMessage, Pager } from '../components/MaintenanceUI';
 import CommunityPageHero from '../components/CommunityPageHero';
 
 export default function Notifications() {
+  useLanguage();
   const [rows, setRows] = useState([]);
   const [skip, setSkip] = useState(0);
   const [error, setError] = useState('');
@@ -35,15 +37,15 @@ export default function Notifications() {
       setRows(current => current.map(row => row.id === id ? { ...row, readAt: new Date().toISOString() } : row));
     } catch (err) { setError(getApiErrorMessage(err)); } finally { setBusyId(null); }
   };
-  return <div className="maintenance-screen"><CommunityPageHero pathname="/notifications" title="Notifications"><button className="btn btn-outline-primary" onClick={() => setVersion(v => v + 1)} disabled={loading}>Refresh</button></CommunityPageHero>
-    <p className="text-muted small">Updates from the society office. Refreshes every 30 seconds while this page is open.</p>
+  return <div className="maintenance-screen"><CommunityPageHero pathname="/notifications" title={uiText("Notifications")}><button className="btn btn-outline-primary" onClick={() => setVersion(v => v + 1)} disabled={loading}>{uiText("Refresh")}</button></CommunityPageHero>
+    <p className="text-muted small">{uiText("Updates from the society office. Refreshes every 30 seconds while this page is open.")}</p>
     <ErrorMessage error={error} />
-    {loading ? <p role="status">Loading notifications…</p> : !error && !rows.length ? <p className="empty-state">No notifications on this page.</p> : null}
+    {loading ? <p role="status">{uiText("Loading notifications…")}</p> : !error && !rows.length ? <p className="empty-state">{uiText("No notifications on this page.")}</p> : null}
     <div className="d-grid gap-3">{rows.map(row => <article className="card p-3 rounded-4" key={row.id}>
-      <div className="d-flex justify-content-between gap-2"><strong>{{ Bill: 'New bill', PaymentStatus: 'Payment update', ComplaintStatus: 'Help request update', DueDate: 'Payment reminder', Overdue: 'Overdue bill', BillChange: 'Bill updated' }[row.kind] || row.kind}</strong><span className="small">{row.readAt ? 'Read' : 'Unread'}</span></div>
+      <div className="d-flex justify-content-between gap-2"><strong>{uiText({ Bill: 'New bill', PaymentStatus: 'Payment update', ComplaintStatus: 'Help request update', DueDate: 'Payment reminder', Overdue: 'Overdue bill', BillChange: 'Bill updated' }[row.kind] || row.kind)}</strong><span className="small">{row.readAt ? uiText("Read") : uiText("Unread")}</span></div>
       <p className="my-2" style={{ whiteSpace: 'pre-wrap' }}>{row.message}</p>
-      <small className="text-muted">{new Date(row.createdAt).toLocaleString()}</small>
-      {!row.readAt && <button className="btn btn-outline-primary mt-3 align-self-start" disabled={busyId !== null} onClick={() => markRead(row.id)}>Mark as read</button>}
+      <small className="text-muted">{new Date(row.createdAt).toLocaleString(getLocale())}</small>
+      {!row.readAt && <button className="btn btn-outline-primary mt-3 align-self-start" disabled={busyId !== null} onClick={() => markRead(row.id)}>{uiText("Mark as read")}</button>}
     </article>)}</div><Pager skip={skip} count={rows.length} onPage={setSkip} busy={loading || busyId !== null} />
   </div>;
 }

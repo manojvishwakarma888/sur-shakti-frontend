@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import BrandLogo from '../components/BrandLogo';
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
@@ -12,6 +13,7 @@ import './Login.css';
 const IMAGE_BASE = `${BACKEND_URL}/`; 
 
 const Login = () => {
+  useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [topResidents, setTopResidents] = useState([]); 
@@ -59,17 +61,17 @@ const Login = () => {
         const passwordDue = isPasswordUpdateDue(loginEmail);
 
         if (passwordDue) {
-          toast.info("Password update reminder: please refresh your password (30-day policy).");
+          toast.info(uiText("Password update reminder: please refresh your password (30-day policy)."));
           navigate('/change-password'); 
         } else {
           navigate('/dashboard');
         }
       } else {
-        toast.error("Invalid Login. Please check your email and password.");
+        toast.error(uiText("Invalid Login. Please check your email and password."));
       }
     } catch (err) {
       setIsLoading(false);
-      toast.error("Login failed. Service may be unavailable.");
+      toast.error(uiText("Login failed. Service may be unavailable."));
     }
   };
 
@@ -82,12 +84,12 @@ const Login = () => {
           <div>
             <div className="brand-header">
               <BrandLogo size={104} />
-              <span className="fw-bold ms-2 fs-4">Sur Shakti Connect</span>
+              <span className="fw-bold ms-2 fs-4">{uiText("Sur Shakti Connect")}</span>
             </div>
             
             <div className="hero-text mt-5">
-              <h1 className="display-4 fw-bold">Your Community, <br />Digitalized.</h1>
-              <p className="mt-3 fs-5 opacity-75">Seamless payments and secure management.</p>
+              <h1 className="display-4 fw-bold">{uiText("Your Community,") + ' '}<br />{uiText("Digitalized.")}</h1>
+              <p className="mt-3 fs-5 opacity-75">{uiText("Seamless payments and secure management.")}</p>
             </div>
           </div>
 
@@ -119,10 +121,10 @@ const Login = () => {
                       />
                     ))
                   ) : (
-                    <img src="https://i.pravatar.cc/150?img=1" className="avatar shadow-sm" alt="Default" style={{ width: '42px', borderRadius: '50%' }} />
+                    <img src="https://i.pravatar.cc/150?img=1" className="avatar shadow-sm" alt={uiText("Default")} style={{ width: '42px', borderRadius: '50%' }} />
                   )}
                 </div>
-                <span className="small fw-bold opacity-90">Trusted by 120+ Families</span>
+                <span className="small fw-bold opacity-90">{uiText("Trusted by 120+ Families")}</span>
             </div>
           </div>
         </div>
@@ -130,13 +132,13 @@ const Login = () => {
         {/* RIGHT SIDE: LOGIN FORM */}
         <div className="col-12 col-md-6 login-form-section d-flex align-items-center justify-content-center bg-white p-4">
           <div className="form-wrapper w-100" style={{ maxWidth: '400px' }}> 
-            <div className="d-md-none text-center mb-4"><BrandLogo size={144} /><p className="fw-bold mt-2 mb-0">Sur Shakti Connect</p></div>
-            <h2 className="form-title fw-bold text-dark">Welcome Back</h2>
-            <p className="form-subtitle text-muted mb-4">Please enter your details to sign in.</p>
+            <div className="d-md-none text-center mb-4"><BrandLogo size={144} /><p className="fw-bold mt-2 mb-0">{uiText("Sur Shakti Connect")}</p></div>
+            <h2 className="form-title fw-bold text-dark">{uiText("Welcome Back")}</h2>
+            <p className="form-subtitle text-muted mb-4">{uiText("Please enter your details to sign in.")}</p>
 
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
-                <label className="form-label fw-bold small text-secondary">Email Address</label>
+                <label className="form-label fw-bold small text-secondary">{uiText("Email Address")}</label>
                 <div className="input-group border rounded-3 px-3 py-2 bg-light">
                   <FaEnvelope className="text-muted me-2 mt-1" />
                   <input 
@@ -151,7 +153,7 @@ const Login = () => {
               </div>
 
               <div className="mb-3">
-                <label className="form-label fw-bold small text-secondary">Password</label>
+                <label className="form-label fw-bold small text-secondary">{uiText("Password")}</label>
                 <div className="input-group border rounded-3 px-3 py-2 bg-light">
                   <FaLock className="text-muted me-2 mt-1" />
                   <input 
@@ -166,13 +168,12 @@ const Login = () => {
               </div>
 
               <button type="submit" className="btn btn-primary w-100 fw-bold py-3 rounded-3 shadow-sm mt-3" disabled={isLoading}>
-                {isLoading ? "Signing In..." : "Sign In"}
+                {isLoading ? uiText("Signing In...") : uiText("Sign In")}
               </button>
             </form>
 
             <div className="mt-4 text-center">
-              <p className="text-muted small">
-                Don't have an account? <Link to="/register" className="fw-bold text-decoration-none text-primary">Register Now</Link>
+              <p className="text-muted small">{uiText("Don't have an account?") + ' '}<Link to="/register" className="fw-bold text-decoration-none text-primary">{uiText("Register Now")}</Link>
               </p>
             </div>
           </div>

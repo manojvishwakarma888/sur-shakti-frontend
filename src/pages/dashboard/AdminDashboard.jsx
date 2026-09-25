@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage, getLocale } from '../../i18n/language.js';
 import ManualBillModal from '../../components/ManualBillModal';
 import { billPayableAmount } from '../../utils/billing';
 import WidgetStack from '../../components/WidgetStack';
@@ -18,6 +19,7 @@ import {
 import { MdOutlinePendingActions } from "react-icons/md";
 
 const AdminDashboard = () => {
+  useLanguage();
   const { user } = useContext(AuthContext);
   
   const [stats, setStats] = useState({ 
@@ -93,13 +95,13 @@ const AdminDashboard = () => {
   };
 
   const handleSendReminders = async () => {
-      if (!window.confirm("Send reminders for due and overdue bills?")) return;
+      if (!window.confirm(uiText("Send reminders for due and overdue bills?"))) return;
       setSendingReminders(true);
       try {
           const response = await api.post('/Bill/send-reminders');
           toast.success((response.data.queued ?? 0) + ' reminders sent to resident inboxes.');
       } catch (error) {
-          toast.error("Failed to send reminders.");
+          toast.error(uiText("Failed to send reminders."));
       } finally {
           setSendingReminders(false);
       }
@@ -107,8 +109,7 @@ const AdminDashboard = () => {
 
   const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
 
-  const StatsCard = ({ title, value, color, icon: Icon, isMoney }) => (
-    <div className="col">
+  const StatsCard = ({ title, value, color, icon: Icon, isMoney }) => { useLanguage(); return (<div className="col">
       <div className={"card admin-stat-card border-0 shadow-sm rounded-4 h-100 stat-tone-" + color} style={{ backgroundColor: `var(--bs-${color}-bg-subtle)` }}>
         <div className="card-body p-3">
           <div className="d-flex justify-content-between align-items-start mb-2">
@@ -120,16 +121,15 @@ const AdminDashboard = () => {
           <h4 className={`fw-bold text-${color} mb-0`}>{isMoney ? formatCurrency(value) : value}</h4>
         </div>
       </div>
-    </div>
-  );
+    </div>); };
 
   return (
     <div className="admin-dashboard">
         
         <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4 screen-intro">
           <div>
-             <h2 className="fw-bold text-dark mb-1">Admin Overview</h2>
-             <p className="text-muted small mb-0">Sur Shakti Residency • Financial Health</p>
+             <h2 className="fw-bold text-dark mb-1">{uiText("Admin Overview")}</h2>
+             <p className="text-muted small mb-0">{uiText("Sur Shakti Residency • Financial Health")}</p>
           </div>
           <div className="d-none d-md-flex align-items-center gap-3">
              {/* 🟢 NEW: Bulk Add Button */}
@@ -137,20 +137,19 @@ const AdminDashboard = () => {
                 onClick={() => setShowImportModal(true)} 
                 className="btn btn-outline-success btn-sm fw-bold d-flex align-items-center gap-2"
              >
-                <FaUserPlus /> Bulk Add
-             </button>
+                <FaUserPlus />{' ' + uiText("Bulk Add")}</button>
           </div>
         </div>
 
-        <div className="d-flex flex-wrap gap-2 mb-3"><Link className="btn btn-outline-primary" to="/maintenance">Accounts & residents</Link><Link className="btn btn-outline-primary" to="/notifications">Notification inbox</Link></div>
+        <div className="d-flex flex-wrap gap-2 mb-3"><Link className="btn btn-outline-primary" to="/maintenance">{uiText("Accounts & residents")}</Link><Link className="btn btn-outline-primary" to="/notifications">{uiText("Notification inbox")}</Link></div>
         <MobileShortcuts admin onAddResidents={() => setShowImportModal(true)} onCreateBill={() => setShowCreateBill(true)} onExportDues={exportDues} exportDisabled={loading || defaulters.length === 0} onRefresh={fetchAdminData} refreshing={loading} />
         {/* Stats Row */}
-        <WidgetStack label="Admin widgets" labels={['Payments received', 'Total spending', 'Available funds', 'Amount still due', 'Open Complaints']} className="row row-cols-2 row-cols-sm-3 row-cols-md-5 g-3 mb-4 admin-widget-row">
-          <StatsCard title="Payments received" value={stats.totalCollection} color="primary" icon={FaArrowUp} isMoney />
-          <StatsCard title="Total spending" value={stats.totalExpense} color="danger" icon={FaArrowDown} isMoney />
-          <StatsCard title="Available funds" value={stats.cashInHand} color="success" icon={FaWallet} isMoney />
-          <StatsCard title="Amount still due" value={stats.totalPending} color="warning" icon={MdOutlinePendingActions} isMoney />
-          <StatsCard title="Open Complaints" value={stats.openComplaints} color="info" icon={FaExclamationTriangle} />
+        <WidgetStack label={uiText("Admin widgets")} labels={['Payments received', 'Total spending', 'Available funds', 'Amount still due', 'Open Complaints']} className="row row-cols-2 row-cols-sm-3 row-cols-md-5 g-3 mb-4 admin-widget-row">
+          <StatsCard title={uiText("Payments received")} value={stats.totalCollection} color="primary" icon={FaArrowUp} isMoney />
+          <StatsCard title={uiText("Total spending")} value={stats.totalExpense} color="danger" icon={FaArrowDown} isMoney />
+          <StatsCard title={uiText("Available funds")} value={stats.cashInHand} color="success" icon={FaWallet} isMoney />
+          <StatsCard title={uiText("Amount still due")} value={stats.totalPending} color="warning" icon={MdOutlinePendingActions} isMoney />
+          <StatsCard title={uiText("Open Complaints")} value={stats.openComplaints} color="info" icon={FaExclamationTriangle} />
         </WidgetStack>
 
         {/* Expense Breakdown Progress Bar */}
@@ -175,8 +174,8 @@ const AdminDashboard = () => {
             <div className="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
               <div className="card-body p-1">
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                   <small className="text-muted fw-bold text-uppercase" style={{fontSize: '0.65rem', letterSpacing: '0.5px'}}>Expense Distribution</small>
-                   <small className="text-danger fw-bold font-monospace" style={{fontSize: '0.7rem'}}>Total: {formatCurrency(stats.totalExpense)}</small>
+                   <small className="text-muted fw-bold text-uppercase" style={{fontSize: '0.65rem', letterSpacing: '0.5px'}}>{uiText("Expense Distribution")}</small>
+                   <small className="text-danger fw-bold font-monospace" style={{fontSize: '0.7rem'}}>{uiText("Total:") + ' '}{formatCurrency(stats.totalExpense)}</small>
                 </div>
                 <div className="progress rounded-pill mb-2" style={{ height: '8px', overflow: 'hidden' }}>
                    {breakdown.map((item, idx) => (
@@ -217,7 +216,7 @@ const AdminDashboard = () => {
             <div className="card border-0 shadow-sm rounded-4 h-100">
               <div className="card-body p-4">
                 <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2 admin-dues-heading">
-                  <h5 className="fw-bold mb-0"><FaRupeeSign className="mobile-section-icon me-1" aria-hidden="true" />Residents with unpaid bills</h5>
+                  <h5 className="fw-bold mb-0"><FaRupeeSign className="mobile-section-icon me-1" aria-hidden="true" />{uiText("Residents with unpaid bills")}</h5>
                   <div className="d-flex gap-2">
                       <button 
                           onClick={handleSendReminders} 
@@ -225,23 +224,21 @@ const AdminDashboard = () => {
                           className="btn btn-sm btn-success d-flex align-items-center gap-2 fw-bold"
                       >
                           <FaBell size={16} />
-                          {sendingReminders ? "Sending..." : "Remind All"}
+                          {sendingReminders ? uiText("Sending...") : uiText("Remind All")}
                       </button>
-                      <Link to="/my-bills" className="btn btn-sm btn-outline-primary fw-bold text-decoration-none">
-                          Manage All
-                      </Link>
+                      <Link to="/my-bills" className="btn btn-sm btn-outline-primary fw-bold text-decoration-none">{uiText("Manage All")}</Link>
                   </div>
                 </div>
 
-                {loading ? <div className="text-center py-3">Loading...</div> : 
-                 defaulters.length === 0 ? <p className="text-muted text-center py-4">No pending dues. Great job!</p> : 
+                {loading ? <div className="text-center py-3">{uiText("Loading...")}</div> : 
+                 defaulters.length === 0 ? <p className="text-muted text-center py-4">{uiText("No pending dues. Great job!")}</p> : 
                   defaulters.slice(0, 4).map(d => (
                     <div key={d.id} className="d-flex justify-content-between align-items-center p-3 mb-2 bg-white border rounded-3 admin-due-item">
                       <div className="d-flex align-items-center">
                         <span className="badge bg-danger bg-opacity-10 text-danger p-2 me-3 rounded-3" style={{width: '60px'}}> {d.flatNo}</span>
                         <div>
                             <h6 className="mb-0 fw-bold">{d.name}</h6>
-                            <small className="text-muted">Due: {new Date(d.date).toLocaleDateString()}</small>
+                            <small className="text-muted">{uiText("Due:") + ' '}{new Date(d.date).toLocaleDateString(getLocale())}</small>
                         </div>
                       </div>
                       <span className="fw-bold text-danger">{formatCurrency(d.amount)}</span>
@@ -256,12 +253,12 @@ const AdminDashboard = () => {
           <div className="col-md-4">
             <div className="card border-0 shadow-sm rounded-4 h-100">
               <div className="card-body p-4">
-                <h5 className="fw-bold mb-4">Quick Tasks</h5>
+                <h5 className="fw-bold mb-4">{uiText("Quick Tasks")}</h5>
                 <div className="d-grid gap-3">
                   <Link to="/notices" className="btn btn-light p-3 text-start rounded-4 border-0" style={{backgroundColor: 'var(--task-notice-bg, #E3F2FD)'}}>
                     <div className="d-flex align-items-center">
                         <div className="bg-white p-2 rounded-circle me-3 text-primary"><FaBullhorn /></div>
-                        <div><h6 className="fw-bold mb-0">Post New Notice</h6><small className="text-muted">Broadcast to residents</small></div>
+                        <div><h6 className="fw-bold mb-0">{uiText("Post New Notice")}</h6><small className="text-muted">{uiText("Broadcast to residents")}</small></div>
                     </div>
                   </Link>
                   {/* ... other task links ... */}

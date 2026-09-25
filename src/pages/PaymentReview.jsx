@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import { paymentStatusLabel } from '../utils/billing';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
@@ -8,11 +9,13 @@ import { toast } from 'react-toastify';
 import BillingNavigation from '../components/BillingNavigation';
 
 export default function PaymentReview() {
+  useLanguage();
   const { user } = useContext(AuthContext);
   return staffRole(user) ? <ReviewQueue /> : <Navigate to="/my-bills" replace />;
 }
 
 function ReviewQueue() {
+  useLanguage();
   const [pendingVerifications, setPendingVerifications] = useState([]);
   const [verificationNotes, setVerificationNotes] = useState({});
   const [verificationBusyId, setVerificationBusyId] = useState(null);
@@ -48,13 +51,13 @@ function ReviewQueue() {
     const id = transaction.transactionId;
     const note = verificationNotes[id]?.trim();
     if (!isVerified && !note) {
-      toast.error('Add a reason before rejecting this payment.');
+      toast.error(uiText("Add a reason before rejecting this payment."));
       return;
     }
     setVerificationBusyId(id);
     try {
       await verifyPaymentTransaction({ paymentTransactionId: id, isVerified, failureReason: isVerified ? null : note });
-      toast.success(isVerified ? 'Payment approved.' : 'Payment rejected.');
+      toast.success(isVerified ? uiText("Payment approved.") : uiText("Payment rejected."));
       setVerificationNotes(current => ({ ...current, [id]: '' }));
       await fetchPendingVerifications();
     } catch (err) {
@@ -69,7 +72,7 @@ function ReviewQueue() {
     setVerificationBusyId(id);
     try {
       await retryPaymentVerification({ paymentTransactionId: id, reason: verificationNotes[id]?.trim() || null });
-      toast.success('Payment sent for review again.');
+      toast.success(uiText("Payment sent for review again."));
       await fetchPendingVerifications();
     } catch (err) {
       toast.error(getApiErrorMessage(err, 'Unable to retry verification.'));
@@ -89,24 +92,24 @@ function ReviewQueue() {
   };
 
   return <div className="bills-screen">
-    <div className="page-heading"><div><h2 className="fw-bold mb-1">Payment review</h2><p className="text-muted mb-0">Verify resident payments and follow up on unpaid bills.</p></div>
-      <button className="btn btn-outline-primary" disabled={loading || verificationBusyId !== null} onClick={fetchPendingVerifications}>Refresh queue</button>
+    <div className="page-heading"><div><h2 className="fw-bold mb-1">{uiText("Payment review")}</h2><p className="text-muted mb-0">{uiText("Verify resident payments and follow up on unpaid bills.")}</p></div>
+      <button className="btn btn-outline-primary" disabled={loading || verificationBusyId !== null} onClick={fetchPendingVerifications}>{uiText("Refresh queue")}</button>
     </div>
     <BillingNavigation />
     {error && <div className="alert alert-danger" role="alert">{error}</div>}
-    {loading && <p role="status">Loading payments to review…</p>}
+    {loading && <p role="status">{uiText("Loading payments to review…")}</p>}
       {!loading && !error && (
         <section className="card border-0 shadow-sm rounded-4 mb-4" aria-labelledby="verification-title">
           <div className="card-body p-3 p-md-4">
             <div className="d-flex justify-content-between align-items-center gap-3 mb-3">
               <div>
-                <h3 id="verification-title" className="h5 fw-bold mb-1">Payments awaiting review</h3>
-                <p className="text-muted small mb-0">Review resident references before marking bills paid.</p>
+                <h3 id="verification-title" className="h5 fw-bold mb-1">{uiText("Payments awaiting review")}</h3>
+                <p className="text-muted small mb-0">{uiText("Review resident references before marking bills paid.")}</p>
               </div>
               <span className="badge text-bg-primary rounded-pill">{pendingVerifications.length}</span>
             </div>
             {pendingVerifications.length === 0 ? (
-              <p className="small text-muted mb-0">No payments are waiting for review.</p>
+              <p className="small text-muted mb-0">{uiText("No payments are waiting for review.")}</p>
             ) : (
               <div className="d-grid gap-3">
                 {pendingVerifications.map(transaction => {
@@ -117,23 +120,23 @@ function ReviewQueue() {
                     <article key={id} className="border rounded-4 p-3">
                       <div className="d-flex justify-content-between align-items-start gap-3 mb-2">
                         <div>
-                          <div className="fw-bold">Payment #{id} · Row house {transaction.flatNo || '—'} · {transaction.billMonth || 'Bill'}</div>
-                          <div className="small text-muted">Reference: {transaction.transactionReferenceId || 'Not submitted'} · {transaction.paymentMode || 'Payment'}</div>
+                          <div className="fw-bold">{uiText("Payment #")}{id}{' ' + uiText("· Row house") + ' '}{transaction.flatNo || '—'} · {transaction.billMonth || uiText("Bill")}</div>
+                          <div className="small text-muted">{uiText("Reference:") + ' '}{transaction.transactionReferenceId || uiText("Not submitted")} · {transaction.paymentMode || uiText("Payment")}</div>
                         </div>
                         <div className="text-end">
                           <div className="fw-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(transaction.amountPaid || 0)}</div>
-                          <span className={`badge ${isFailed ? 'text-bg-danger' : 'text-bg-warning'}`}>{paymentStatusLabel(transaction.status)}</span>
+                          <span className={`badge ${isFailed ? 'text-bg-danger' : 'text-bg-warning'}`}>{uiText(paymentStatusLabel(transaction.status))}</span>
                         </div>
                       </div>
-                      {transaction.failureReason && <p className="small text-danger mb-2">Last failure: {transaction.failureReason}</p>}
-                      <button className="btn btn-outline-secondary btn-sm mb-2" onClick={() => openAuthenticatedFile('/payment-transactions/' + id + '/proof').catch(err => toast.error(err.response?.status === 404 ? 'No proof attached.' : getApiErrorMessage(err)))}>View payment proof</button>
-                      {isRejected && <p className="small text-muted">Rejected — a corrected payment needs a new reference.</p>}
-                      <label htmlFor={`verification-note-${id}`} className="form-label small fw-semibold mb-1">Review note or rejection reason</label>
-                      <input id={`verification-note-${id}`} className="form-control form-control-sm mb-2" maxLength={500} value={verificationNotes[id] || ''} onChange={event => setVerificationNotes(current => ({ ...current, [id]: event.target.value }))} placeholder="Required when rejecting" />
+                      {transaction.failureReason && <p className="small text-danger mb-2">{uiText("Last failure:") + ' '}{transaction.failureReason}</p>}
+                      <button className="btn btn-outline-secondary btn-sm mb-2" onClick={() => openAuthenticatedFile('/payment-transactions/' + id + '/proof').catch(err => toast.error(err.response?.status === 404 ? uiText("No proof attached.") : getApiErrorMessage(err)))}>{uiText("View payment proof")}</button>
+                      {isRejected && <p className="small text-muted">{uiText("Rejected — a corrected payment needs a new reference.")}</p>}
+                      <label htmlFor={`verification-note-${id}`} className="form-label small fw-semibold mb-1">{uiText("Review note or rejection reason")}</label>
+                      <input id={`verification-note-${id}`} className="form-control form-control-sm mb-2" maxLength={500} value={verificationNotes[id] || ''} onChange={event => setVerificationNotes(current => ({ ...current, [id]: event.target.value }))} placeholder={uiText("Required when rejecting")} />
                       <div className="d-flex flex-wrap gap-2">
-                        <button className="btn btn-success btn-sm flex-grow-1" disabled={verificationBusyId !== null || isRejected} onClick={() => handleVerifyPayment(transaction, true)}>Approve</button>
-                        <button className="btn btn-outline-danger btn-sm flex-grow-1" disabled={verificationBusyId !== null || isRejected} onClick={() => handleVerifyPayment(transaction, false)}>Reject</button>
-                        {isFailed && <button className="btn btn-outline-primary btn-sm flex-grow-1" disabled={verificationBusyId !== null} onClick={() => handleRetryVerification(transaction)}>Retry check</button>}
+                        <button className="btn btn-success btn-sm flex-grow-1" disabled={verificationBusyId !== null || isRejected} onClick={() => handleVerifyPayment(transaction, true)}>{uiText("Approve")}</button>
+                        <button className="btn btn-outline-danger btn-sm flex-grow-1" disabled={verificationBusyId !== null || isRejected} onClick={() => handleVerifyPayment(transaction, false)}>{uiText("Reject")}</button>
+                        {isFailed && <button className="btn btn-outline-primary btn-sm flex-grow-1" disabled={verificationBusyId !== null} onClick={() => handleRetryVerification(transaction)}>{uiText("Retry check")}</button>}
                       </div>
                     </article>
                   );
@@ -145,8 +148,8 @@ function ReviewQueue() {
       )}
 
 
-    <section className="card p-3 rounded-4"><h3 className="h5">Payment reminders</h3><p className="text-muted small">Send in-app reminders for due and overdue bills. Duplicate daily reminders are skipped.</p>
-      <button className="btn btn-outline-primary align-self-start" disabled={reminding} onClick={sendInAppReminders}>{reminding ? 'Sending reminders…' : 'Send reminders'}</button>
+    <section className="card p-3 rounded-4"><h3 className="h5">{uiText("Payment reminders")}</h3><p className="text-muted small">{uiText("Send in-app reminders for due and overdue bills. Duplicate daily reminders are skipped.")}</p>
+      <button className="btn btn-outline-primary align-self-start" disabled={reminding} onClick={sendInAppReminders}>{reminding ? uiText("Sending reminders…") : uiText("Send reminders")}</button>
     </section>
   </div>;
 }

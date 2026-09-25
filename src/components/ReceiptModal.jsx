@@ -1,16 +1,18 @@
+import { t as uiText, useLanguage, getLocale } from '../i18n/language.js';
 import BrandLogo from './BrandLogo';
 import React, { useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { FaTimes, FaDownload, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 
 const ReceiptModal = ({ bill, receipt, user, onClose }) => {
+  useLanguage();
   const receiptRef = useRef();
   const [downloading, setDownloading] = useState(false);
 
   // Determine Data
 
   const flatNo = bill.flatNo || bill.FlatNo || user?.flatNo || "N/A";
-  const paymentDate = bill.paymentDate || bill.PaymentDate ? new Date(bill.paymentDate || bill.PaymentDate).toLocaleDateString() : 'Not available';
+  const paymentDate = bill.paymentDate || bill.PaymentDate ? new Date(bill.paymentDate || bill.PaymentDate).toLocaleDateString(getLocale()) : 'Not available';
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -42,7 +44,7 @@ const ReceiptModal = ({ bill, receipt, user, onClose }) => {
       
     } catch (err) {
       console.error("PDF generation failed", err);
-      toast.error("Could not download the receipt. Please try again.");
+      toast.error(uiText("Could not download the receipt. Please try again."));
     } finally {
       setDownloading(false);
     }
@@ -56,8 +58,8 @@ const ReceiptModal = ({ bill, receipt, user, onClose }) => {
         
         {/* Header Actions */}
         <div className="receipt-preview-header d-flex justify-content-between align-items-center p-3 border-bottom bg-light">
-           <h6 id="receipt-preview-title" className="fw-bold m-0 text-secondary">Receipt Preview</h6>
-           <button aria-label="Close receipt" disabled={downloading} onClick={onClose} className="btn btn-sm btn-light border rounded-circle"><FaTimes/></button>
+           <h6 id="receipt-preview-title" className="fw-bold m-0 text-secondary">{uiText("Receipt Preview")}</h6>
+           <button aria-label={uiText("Close receipt")} disabled={downloading} onClick={onClose} className="btn btn-sm btn-light border rounded-circle"><FaTimes/></button>
         </div>
 
         {/* --- RECEIPT CONTENT (Captured for PDF) --- */}
@@ -67,52 +69,47 @@ const ReceiptModal = ({ bill, receipt, user, onClose }) => {
             {/* Society Header */}
             <div className="text-center mb-4 border-bottom pb-3">
                 <BrandLogo size={104} className="mb-2" />
-                <h4 className="fw-bold mb-0 text-uppercase" style={{letterSpacing: '1px'}}>Sur Shakti Society</h4>
-                <small className="text-muted">Valsad, Gujarat, India</small>
+                <h4 className="fw-bold mb-0 text-uppercase" style={{letterSpacing: '1px'}}>{uiText("Sur Shakti Society")}</h4>
+                <small className="text-muted">{uiText("Valsad, Gujarat, India")}</small>
             </div>
 
             {/* Receipt Badge */}
             <div className="text-center mb-4">
                 <div className="badge bg-success bg-opacity-10 text-success border border-success px-4 py-2 rounded-pill">
-                    <FaCheckCircle className="me-2"/> PAYMENT RECEIPT
-                </div>
-                <div className="mt-2 text-muted small">
-                    Receipt: {receipt?.receiptNumber}
+                    <FaCheckCircle className="me-2"/>{' ' + uiText("PAYMENT RECEIPT")}</div>
+                <div className="mt-2 text-muted small">{uiText("Receipt:") + ' '}{receipt?.receiptNumber}
                 </div>
             </div>
 
             {/* Details Table */}
             <div className="row g-3 mb-4 border p-3 rounded-3 bg-light bg-opacity-25">
                 <div className="col-6">
-                    <small className="text-muted fw-bold d-block text-uppercase" style={{fontSize: '0.7rem'}}>Payment reference</small>
+                    <small className="text-muted fw-bold d-block text-uppercase" style={{fontSize: '0.7rem'}}>{uiText("Payment reference")}</small>
                     <span className="fw-bold">{receipt?.transactionReferenceId || receipt?.paymentMode}</span>
                 </div>
                 <div className="col-6 text-end">
-                    <small className="text-muted fw-bold d-block text-uppercase" style={{fontSize: '0.7rem'}}>Row House No</small>
+                    <small className="text-muted fw-bold d-block text-uppercase" style={{fontSize: '0.7rem'}}>{uiText("Row House No")}</small>
                     <span className="fw-bold">{flatNo}</span>
                 </div>
                 <div className="col-6">
-                    <small className="text-muted fw-bold d-block text-uppercase" style={{fontSize: '0.7rem'}}>Paid Date</small>
+                    <small className="text-muted fw-bold d-block text-uppercase" style={{fontSize: '0.7rem'}}>{uiText("Paid Date")}</small>
                     <span>{paymentDate}</span>
                 </div>
                 <div className="col-6 text-end">
-                    <small className="text-muted fw-bold d-block text-uppercase" style={{fontSize: '0.7rem'}}>Month</small>
+                    <small className="text-muted fw-bold d-block text-uppercase" style={{fontSize: '0.7rem'}}>{uiText("Month")}</small>
                     <span>{bill.month}</span>
                 </div>
             </div>
 
             {/* Amount Section */}
             <div className="d-flex justify-content-between align-items-center border-top border-bottom py-3 mb-4">
-                <span className="fw-bold text-secondary">Total Amount Paid</span>
+                <span className="fw-bold text-secondary">{uiText("Total Amount Paid")}</span>
                 <span className="fs-3 fw-bold text-dark">₹{receipt?.amountPaid}</span>
             </div>
 
             {/* Footer */}
             <div className="text-center mt-5 pt-3 text-muted" style={{borderTop: '1px dashed #ccc'}}>
-                <small style={{fontSize: '0.75rem'}}>
-                    This receipt is valid proof of payment for society maintenance.<br/>
-                    Generated via Sur Shakti Connect.
-                </small>
+                <small style={{fontSize: '0.75rem'}}>{uiText("This receipt is valid proof of payment for society maintenance.")}<br/>{uiText("Generated via Sur Shakti Connect.")}</small>
             </div>
         </div>
         </div>
@@ -120,18 +117,16 @@ const ReceiptModal = ({ bill, receipt, user, onClose }) => {
 
         {/* Footer Buttons */}
         <div className="receipt-preview-footer p-3 border-top bg-light d-flex gap-2">
-            <button className="btn btn-secondary flex-grow-1" onClick={onClose} disabled={downloading}>
-                Close
-            </button>
+            <button className="btn btn-secondary flex-grow-1" onClick={onClose} disabled={downloading}>{uiText("Close")}</button>
             <button 
                 className="btn btn-primary flex-grow-1 fw-bold" 
                 onClick={handleDownload} 
                 disabled={downloading}
             >
                 {downloading ? (
-                    <><FaSpinner className="fa-spin me-2"/> Generating PDF...</>
+                    <><FaSpinner className="fa-spin me-2"/>{' ' + uiText("Generating PDF...")}</>
                 ) : (
-                    <><FaDownload className="me-2"/> Download PDF</>
+                    <><FaDownload className="me-2"/>{' ' + uiText("Download PDF")}</>
                 )}
             </button>
         </div>

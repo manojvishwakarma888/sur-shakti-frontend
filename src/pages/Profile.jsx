@@ -1,3 +1,4 @@
+import { t as uiText, useLanguage } from '../i18n/language.js';
 import React, { useEffect, useState, useContext } from 'react';
 import api, { getApiErrorMessage, publicAssetUrl } from '../services/api';
 import Sidebar from '../components/Sidebar';
@@ -8,6 +9,7 @@ import { markPasswordUpdatedNow } from '../utils/passwordPolicy';
 import CommunityPageHero from '../components/CommunityPageHero';
 
 const Profile = () => {
+  useLanguage();
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   
@@ -37,7 +39,7 @@ const Profile = () => {
       setProfile(res.data);
       setLoading(false);
     } catch (err) {
-      toast.error("Failed to load profile.");
+      toast.error(uiText("Failed to load profile."));
       setLoading(false);
     }
   };
@@ -49,11 +51,11 @@ const Profile = () => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       e.target.value = '';
-      return toast.error('Choose a JPEG, PNG, or WebP image.');
+      return toast.error(uiText("Choose a JPEG, PNG, or WebP image."));
     }
     if (file.size > 5 * 1024 * 1024) {
       e.target.value = '';
-      return toast.error('Profile photo must be 5 MB or smaller.');
+      return toast.error(uiText("Profile photo must be 5 MB or smaller."));
     }
 
     const formData = new FormData();
@@ -67,7 +69,7 @@ const Profile = () => {
       
       // Update UI immediately
       setProfile({ ...profile, profilePictureUrl: res.data.url });
-      toast.success("Profile photo updated!");
+      toast.success(uiText("Profile photo updated!"));
     } catch (err) {
       console.error(err);
       toast.error(getApiErrorMessage(err, 'Failed to upload photo.'));
@@ -78,15 +80,15 @@ const Profile = () => {
     e.preventDefault();
     try {
       await api.put('Profile/update-contact', { phoneNumber: profile.phoneNumber });
-      toast.success("Phone number updated!");
+      toast.success(uiText("Phone number updated!"));
     } catch (err) {
-      toast.error("Failed to update contact.");
+      toast.error(uiText("Failed to update contact."));
     }
   };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    if (passData.newPassword !== passData.confirmPassword) return toast.error("New passwords do not match!");
+    if (passData.newPassword !== passData.confirmPassword) return toast.error(uiText("New passwords do not match!"));
 
     try {
       await api.post('Profile/change-password', {
@@ -94,18 +96,18 @@ const Profile = () => {
         newPassword: passData.newPassword
       });
       markPasswordUpdatedNow(user?.email);
-      toast.success("Password changed!");
+      toast.success(uiText("Password changed!"));
       setPassData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
-      toast.error(err.response?.data || "Incorrect current password.");
+      toast.error(err.response?.data || uiText("Incorrect current password."));
     }
   };
 
-  if (loading) return <div className="d-flex justify-content-center mt-5">Loading...</div>;
+  if (loading) return <div className="d-flex justify-content-center mt-5">{uiText("Loading...")}</div>;
 
   return (
     <div className="profile-screen">
-        <CommunityPageHero pathname="/profile" title="Account Settings" />
+        <CommunityPageHero pathname="/profile" title={uiText("Account Settings")} />
 
         <div className="row g-4">
           {/* --- LEFT COLUMN: PROFILE --- */}
@@ -113,8 +115,7 @@ const Profile = () => {
             <div className="card border-0 shadow-sm rounded-4 h-100">
               <div className="card-header bg-white border-0 pt-4 px-4 pb-0">
                 <h5 className="fw-bold d-flex align-items-center">
-                  <FaUserCircle className="me-2 text-primary" /> My Profile
-                </h5>
+                  <FaUserCircle className="me-2 text-primary" />{' ' + uiText("My Profile")}</h5>
               </div>
               <div className="card-body p-4">
                 
@@ -125,7 +126,7 @@ const Profile = () => {
                     {profile.profilePictureUrl ? (
                         <img 
                           src={publicAssetUrl(profile.profilePictureUrl)}
-                          alt="Profile" 
+                          alt={uiText("Profile")} 
                           className="rounded-circle border border-3 border-light shadow-sm"
                           style={{ width: '120px', height: '120px', objectFit: 'cover' }} 
                         />
@@ -149,14 +150,14 @@ const Profile = () => {
 
                 <form onSubmit={handleUpdateContact}>
                   <div className="mb-3">
-                    <label className="small text-muted fw-bold">FULL NAME</label>
+                    <label className="small text-muted fw-bold">{uiText("FULL NAME")}</label>
                     <input type="text" className="form-control bg-light" value={profile.fullName} disabled />
                   </div>
                   <div className="mb-3">
-                    <label className="small text-muted fw-bold">PHONE NUMBER</label>
+                    <label className="small text-muted fw-bold">{uiText("PHONE NUMBER")}</label>
                     <input type="text" className="form-control" value={profile.phoneNumber} onChange={(e) => setProfile({...profile, phoneNumber: e.target.value})} />
                   </div>
-                  <button type="submit" className="btn btn-primary w-100 fw-bold"><FaSave className="me-2"/> Update Contact</button>
+                  <button type="submit" className="btn btn-primary w-100 fw-bold"><FaSave className="me-2"/>{' ' + uiText("Update Contact")}</button>
                 </form>
               </div>
             </div>
@@ -166,23 +167,23 @@ const Profile = () => {
           <div className="col-md-6">
             <div className="card border-0 shadow-sm rounded-4 h-100">
               <div className="card-header bg-white border-0 pt-4 px-4 pb-0">
-                <h5 className="fw-bold text-danger"><FaLock className="me-2" /> Security</h5>
+                <h5 className="fw-bold text-danger"><FaLock className="me-2" />{' ' + uiText("Security")}</h5>
               </div>
               <div className="card-body p-4">
                 <form onSubmit={handleChangePassword}>
                   <div className="mb-3">
-                    <label className="small text-muted fw-bold">CURRENT PASSWORD</label>
+                    <label className="small text-muted fw-bold">{uiText("CURRENT PASSWORD")}</label>
                     <input type="password" className="form-control" required value={passData.currentPassword} onChange={(e) => setPassData({...passData, currentPassword: e.target.value})} />
                   </div>
                   <div className="mb-3">
-                    <label className="small text-muted fw-bold">NEW PASSWORD</label>
+                    <label className="small text-muted fw-bold">{uiText("NEW PASSWORD")}</label>
                     <input type="password" className="form-control" required minLength={6} value={passData.newPassword} onChange={(e) => setPassData({...passData, newPassword: e.target.value})} />
                   </div>
                   <div className="mb-3">
-                    <label className="small text-muted fw-bold">CONFIRM PASSWORD</label>
+                    <label className="small text-muted fw-bold">{uiText("CONFIRM PASSWORD")}</label>
                     <input type="password" className="form-control" required value={passData.confirmPassword} onChange={(e) => setPassData({...passData, confirmPassword: e.target.value})} />
                   </div>
-                  <button type="submit" className="btn btn-outline-danger w-100 fw-bold">Change Password</button>
+                  <button type="submit" className="btn btn-outline-danger w-100 fw-bold">{uiText("Change Password")}</button>
                 </form>
               </div>
             </div>
